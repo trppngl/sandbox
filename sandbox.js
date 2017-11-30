@@ -4,18 +4,56 @@ var highlightPane = document.getElementById('highlight-pane');
 
 var fragment = document.createDocumentFragment();
 
-function getRangeFromSegs(startSeg, endSeg, startOffset, endOffset) {
+function getlineRectsFromSegs(startSeg, endSeg, startOffset, endOffset) {
+  
+  var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+  var scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
+  var columnRect = column.getBoundingClientRect();
+  var columnTop = columnRect.top;
+  var columnLeft = columnRect.left;
+  var extensionWidth = 8;
+  
   var range = document.createRange();
   var startNode = startSeg.firstChild;
   var endNode = endSeg.firstChild;
+  
+  var rangeRects;
+  var lineRects = [];
+  var currentLineRect;
+  
   startOffset = startOffset || 0;
   endOffset = endOffset || endNode.length;
   range.setStart(startNode, startOffset);
   range.setEnd(endNode, endOffset);
-  return range;
+  rangeRects = range.getClientRects();
+  
+  for (var i = 0; i < rangeRects.length; i++) {
+    
+    // Range may have empty elements with weird tops; skip them
+    if (rangeRects[i].width) {
+      
+      // Last (most recently added) lineRect
+      currentLineRect = lineRects[lineRects.length - 1];
+      
+      // New lineRect if none exist yet or tops don't match
+      if (!currentLineRect || currentLineRect.top !== rangeRects[i].top) {
+        lineRects.push({
+          top: rangeRects[i].top + scrollTop - columnTop,
+          left: rangeRects[i].left + scrollLeft - columnLeft,
+          width: rangeRects[i].width + extensionWidth
+        });
+      } else {
+        currentLineRect.width += rangeRects[i].width;
+      }
+    }
+  }
+
+  // Only applies to very last line; should it also apply elsewhere?
+  lineRects[lineRects.length - 1].width -= extensionWidth;
+  return lineRects;
 }
 
-function getLineRectsFromRange(range) {
+/*function getLineRectsFromRange(range) {
   var rangeRects = range.getClientRects();
   var lineRects = [];
   var currentLineRect;
@@ -55,7 +93,7 @@ function adjustLineRects(lineRects) {
     }
   }
   return lineRects;
-}
+}*/
 
 function makeHighlightBoxes(lineRects, startOffset, endOffset) {
   
@@ -93,10 +131,8 @@ function makeHighlightBoxes(lineRects, startOffset, endOffset) {
 }
 
 var t0 = performance.now();
-var testRange = getRangeFromSegs(seg0, seg23);
-var lineRects = getLineRectsFromRange(testRange);
-var adjustedRects = adjustLineRects(lineRects);
+var lineRects = getlineRectsFromSegs(seg0, seg23);
 var t1 = performance.now();
 console.log((t1 - t0).toFixed(4), 'milliseconds');
 
-makeHighlightBoxes(adjustedRects);
+makeHighlightBoxes(lineRects);
