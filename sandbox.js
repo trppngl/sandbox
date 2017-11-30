@@ -4,49 +4,50 @@ var highlightPane = document.getElementById('highlight-pane');
 
 var fragment = document.createDocumentFragment();
 
-function getRangeFromSegs(startSeg, endSeg, startOffset, endOffset) {
-  var range = document.createRange();
-  var startNode = startSeg.firstChild;
-  var endNode = endSeg.firstChild;
-  startOffset = startOffset || 0;
-  endOffset = endOffset || endNode.length;
-  range.setStart(startNode, startOffset);
-  range.setEnd(endNode, endOffset);
-  return range;
-}
-
-function getLineRectsFromRange(range) {
-  var rangeRects = range.getClientRects();
-  var lineRects = [];
-  var currentLineRect;
-  for (var i = 0; i < rangeRects.length; i++) {
-    if (rangeRects[i].width) { // Range may have empty elements with weird tops; skip them
-      currentLineRect = lineRects[lineRects.length - 1]; // Last item in array
-      if (currentLineRect && currentLineRect.top === rangeRects[i].top) {
-        currentLineRect.width += rangeRects[i].width;
-      } else { // Either no lineRects yet (first time) or tops don't match
-        lineRects.push({
-          top: rangeRects[i].top,
-          left: rangeRects[i].left,
-          width: rangeRects[i].width
-        });
-      }
-    }
-  }
-  return lineRects;
-}
-
-// Three DOM measurements... Problem?
-
-// Combine functions immediately above and below?
-
-function adjustLineRects(lineRects) {
+function getLineRectsFromSegs(startSeg, endSeg, startOffset, endOffset) {
+  
   var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
   var scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
   var columnRect = column.getBoundingClientRect();
   var columnTop = columnRect.top;
   var columnLeft = columnRect.left;
   var extensionWidth = 8;
+  
+  var rangeRects;
+  var lineRects = [];
+  var currentLineRect;
+  
+  var range = document.createRange();
+  var startNode = startSeg.firstChild;
+  var endNode = endSeg.firstChild;
+  
+  startOffset = startOffset || 0;
+  endOffset = endOffset || endNode.length;
+  range.setStart(startNode, startOffset);
+  range.setEnd(endNode, endOffset);
+  rangeRects = range.getClientRects();
+  
+  for (var i = 0; i < rangeRects.length; i++) {
+    
+    // Range may have empty elements with weird tops; skip them
+    if (rangeRects[i].width) {
+      
+      // Most recently added lineRect (may not exist)
+      currentLineRect = lineRects[lineRects.length - 1];
+      
+      // New lineRect if none exist or tops don't match
+      if (!currentLineRect || currentLineRect.top !== rangeRects[i].top) {
+        lineRects.push({
+          top: rangeRects[i].top,
+          left: rangeRects[i].left,
+          width: rangeRects[i].width
+        });
+      } else { // Else incorporate rangeRect into current lineRect
+        currentLineRect.width += rangeRects[i].width;
+      }
+    }
+  }
+
   for (var i = 0; i < lineRects.length; i++) {
     lineRects[i].top += scrollTop - columnTop;
     lineRects[i].left += scrollLeft - columnLeft;
@@ -54,6 +55,7 @@ function adjustLineRects(lineRects) {
       lineRects[i].width += extensionWidth;
     }
   }
+  
   return lineRects;
 }
 
@@ -93,10 +95,8 @@ function makeHighlightBoxes(lineRects, startOffset, endOffset) {
 }
 
 var t0 = performance.now();
-var testRange = getRangeFromSegs(seg0, seg23);
-var lineRects = getLineRectsFromRange(testRange);
-var adjustedRects = adjustLineRects(lineRects);
+var lineRects = getLineRectsFromSegs(seg0, seg23);
 var t1 = performance.now();
 console.log((t1 - t0).toFixed(4), 'milliseconds');
 
-makeHighlightBoxes(adjustedRects);
+makeHighlightBoxes(lineRects);
