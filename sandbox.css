@@ -35,3 +35,7 @@ body {
   background: hsla(43, 100%, 50%, 0.1);
   height: 34px;
 }
+
+.hide {
+  display: none;
+}
