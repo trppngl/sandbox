@@ -1,19 +1,11 @@
 var column = document.getElementById('column');
 var highlightPane = document.getElementById('highlight-pane');
-// Or navigate from column?
 
 var segs = [];
 segs.push.apply(segs, document.getElementsByClassName('seg'));
-var numSegs = segs.length;
 
 var fragment = document.createDocumentFragment();
 
-var segRects = [];
-
-// Global or local?
-var columnRect = column.getBoundingClientRect();
-var columnTop = columnRect.top;
-var columnLeft = columnRect.left;
 var extensionWidth = 8;
 
 //
@@ -22,6 +14,9 @@ function getRectsFromEls(els) {
   
   var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
   var scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
+  
+  var columnTop = column.offsetTop;
+  var columnLeft = column.offsetLeft;
   
   var els = [].concat(els || [])
   var rects = [];
@@ -99,8 +94,9 @@ function makeHighlightBoxes(lineRects, startOffset, endOffset) {
   highlightPane.appendChild(fragment);
 }
 
-// var t0 = performance.now();
-// var t1 = performance.now();
-// console.log((t1 - t0).toFixed(4), 'milliseconds');
+var t0 = performance.now();
 
-// makeHighlightBoxes(lineRects);
+makeHighlightBoxes(getLineRectsFromRects(getRectsFromEls(segs)));
+
+var t1 = performance.now();
+console.log((t1 - t0).toFixed(4), 'milliseconds');
