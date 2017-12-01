@@ -10,9 +10,7 @@ var fragment = document.createDocumentFragment();
 
 var segRects = [];
 
-// Maybe cache these and have vars that record if scroll or resize has occurred and update these a) when needed and b) if scroll or resize has occurred
-var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-var scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
+// Global or local?
 var columnRect = column.getBoundingClientRect();
 var columnTop = columnRect.top;
 var columnLeft = columnRect.left;
@@ -22,13 +20,20 @@ var extensionWidth = 8;
 
 function getRectsFromEls(els) {
   
-  // var els = [].concat(els)
+  var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+  var scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
+  
+  var els = [].concat(els || [])
   var rects = [];
   
   for (i = 0; i < els.length; i++) {
     theseRects = els[i].getClientRects();
     for (j = 0; j < theseRects.length; j++) {
-      rects.push(theseRects[j]);
+      rects.push({
+        top: theseRects[j].top += scrollTop - columnTop,
+        left: theseRects[j].left += scrollLeft - columnLeft,
+        width: theseRects[j].width
+      });
     }
   }
   
@@ -48,16 +53,12 @@ function getLineRectsFromRects(rects) {
         width: rects[i].width
       });
     } else {
-      currentLineRect.width = rects[i].right - currentLineRect.left;
+      currentLineRect.width = rects[i].left + rects[i].width;
     }
   }
 
-  for (var i = 0; i < lineRects.length; i++) {
-    lineRects[i].top += scrollTop - columnTop;
-    lineRects[i].left += scrollLeft - columnLeft;
-    if (i < lineRects.length - 1) {
-      lineRects[i].width += extensionWidth;
-    }
+  for (var i = 0; i < lineRects.length - 1; i++) {
+    lineRects[i].width += extensionWidth;
   }
   
   return lineRects;
