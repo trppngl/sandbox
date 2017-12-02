@@ -15,15 +15,16 @@ function getRectsFromEls(els) {
   var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
   var scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
   
-  var columnTop = column.offsetTop;
-  var columnLeft = column.offsetLeft;
+  var columnRect = column.getBoundingClientRect();
+  var columnTop = columnRect.top;
+  var columnLeft = columnRect.left;
   
-  var els = [].concat(els || [])
   var rects = [];
+  els = [].concat(els || [])
   
-  for (i = 0; i < els.length; i++) {
+  for (var i = 0; i < els.length; i++) {
     theseRects = els[i].getClientRects();
-    for (j = 0; j < theseRects.length; j++) {
+    for (var j = 0; j < theseRects.length; j++) {
       rects.push({
         top: theseRects[j].top += scrollTop - columnTop,
         left: theseRects[j].left += scrollLeft - columnLeft,
@@ -59,26 +60,25 @@ function getLineRectsFromRects(rects) {
   return lineRects;
 }
 
-function makeHighlightBoxes(lineRects, startOffset, endOffset) {
+function makeHighlightBoxes(rects, startOffset, endOffset) {
   
   var box;
   var top;
   var left;
   var width;
   
-  for (var i = lineRects.length - 1; i >= 0; i--) {
+  for (var i = rects.length - 1; i >= 0; i--) {
     
-    top = lineRects[i].top;
-    left = lineRects[i].left;
-    width = lineRects[i].width;
+    top = rects[i].top;
+    left = rects[i].left;
+    width = rects[i].width;
     
-    if (endOffset && i === lineRects.length - 1) {
+    if (endOffset && i === rects.length - 1) {
       width = endOffset;
-      console.log(width);
     }
     
     if (startOffset && i === 0) {
-      left = startOffset;
+      left += startOffset;
       width -= startOffset;
     }
     
@@ -92,6 +92,13 @@ function makeHighlightBoxes(lineRects, startOffset, endOffset) {
   
   highlightPane.innerHTML = '';
   highlightPane.appendChild(fragment);
+}
+
+function accumulateWidth(rects) {
+  rects[0].cumulativeWidth = rects[0].width;
+  for (var i = 1; i < rects.length; i++) {
+    rects[i].cumulativeWidth = rects[i - 1].cumulativeWidth + rects[i].width;
+  }
 }
 
 var t0 = performance.now();
