@@ -87,23 +87,93 @@ function makeHighlightBoxes(rects, startOffset, endOffset) {
     box.style.left = left + 'px';
     box.style.width = width + 'px';
     box.classList.add('highlight-box'); // Change?
-    fragment.appendChild(box);
+    fragment.appendChild(box); // Boxes appended in reverse; could push them to array and unreverse before appending
   }
   
   highlightPane.innerHTML = '';
   highlightPane.appendChild(fragment);
 }
 
-function accumulateWidth(rects) {
-  rects[0].cumulativeWidth = rects[0].width;
+//
+
+function cachePrevDist(rects) {
+  
+  rects[0].prevDist = 0;
+  
   for (var i = 1; i < rects.length; i++) {
-    rects[i].cumulativeWidth = rects[i - 1].cumulativeWidth + rects[i].width;
+    rects[i].prevDist = rects[i - 1].prevDist + rects[i - 1].width;
   }
 }
 
-var t0 = performance.now();
+/* function getLineFromPt(line, pt) {
 
-makeHighlightBoxes(getLineRectsFromRects(getRectsFromEls(segs)));
+  if (forward) {
+    
+    while (visLineRects[line].prevDist + visLineRects[line].width <= pt) {
+      line++;
+    }
+    
+  } else {
 
-var t1 = performance.now();
-console.log((t1 - t0).toFixed(4), 'milliseconds');
+    while (visLineRects[startLine].prevDist > pt) {
+      line--;
+    }
+  }
+  
+  return line;
+} */
+
+// Below iterates up from 0 and is probably temporary; above iterates up or down from current line and is propably better but needs (forward) condition replaced
+
+function getLineFromPt(pt) {
+
+  var line = 0;
+    
+  while (visLineRects[line].prevDist + visLineRects[line].width <= pt) {
+    line++;
+  }
+  
+  return line;
+}
+
+var startLine = 0;
+var endLine = 0;
+
+function abcd(startPt, endPt) {
+  
+  var startOffset;
+  var endOffset;
+  var lineRects; // Change?
+  
+  // startLine = getLineFromPt(startLine, startPt);
+  // endLine = getLineFromPt(endLine, endPt - 1);
+  
+  var t0 = performance.now();
+  
+  startLine = getLineFromPt(startPt);
+  endLine = getLineFromPt(endPt - 1);
+  
+  var t1 = performance.now();
+  console.log((t1 - t0).toFixed(4), 'milliseconds');
+  
+  startOffset = startPt - visLineRects[startLine].prevDist;
+  endOffset = endPt - visLineRects[endLine].prevDist;
+  
+  console.log('Start line: ' + startLine);
+  console.log('Start offset: ' + startOffset);
+  console.log('End line: ' + endLine);
+  console.log('End offset: ' + endOffset);
+  
+  if (endLine < visLineRects.length - 1) {
+    lineRects = visLineRects.slice(startLine, endLine + 1);
+  } else {
+    lineRects = visLineRects.slice(startLine);
+  }
+  
+  makeHighlightBoxes(lineRects, startOffset, endOffset);
+  
+}
+
+var visLineRects = getLineRectsFromRects(getRectsFromEls(segs));
+
+cachePrevDist(visLineRects);
