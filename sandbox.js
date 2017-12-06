@@ -23,6 +23,8 @@ var initialEnd;
 var targetStart;
 var targetEnd;
 
+var segOffsets = [];
+
 //
 
 function getLineRectsFromEls(els) {
@@ -35,12 +37,17 @@ function getLineRectsFromEls(els) {
   var columnLeft = columnRect.left;
   
   var theseRects;
-  
   var lineRects = [];
+  var currentLineRect;
   
   var top;
   var left;
   var width;
+  
+  var startLine;
+  var startOffset;
+  var endLine;
+  var endOffset;
   
   els = [].concat(els || []); // var els?
   
@@ -54,8 +61,6 @@ function getLineRectsFromEls(els) {
       left = theseRects[j].left + scrollLeft - columnLeft;
       width = theseRects[j].width;
       
-      currentLineRect = lineRects[lineRects.length - 1];
-      
       if (!currentLineRect || currentLineRect.top !== top) {
         
         lineRects.push({
@@ -64,19 +69,43 @@ function getLineRectsFromEls(els) {
           width: width
         });
         
+        currentLineRect = lineRects[lineRects.length - 1];
+        
       } else {
         
         currentLineRect.width = left + width;
         
       }
+      
+      if (j === 0) {
+        startLine = lineRects.length - 1;
+        startOffset = left;
+      }
+      
+      if (j === theseRects.length - 1) {
+        endLine = lineRects.length - 1;
+        endOffset = currentLineRect.width;
+        segOffsets.push({
+          startLine: startLine,
+          startOffset: startOffset,
+          endLine: endLine,
+          endOffset: endOffset
+        });
+      }
     }
   }
+  
+  // Could make this a separate function and call from here
   
   for (var k = 0; k < lineRects.length - 1; k++) {
 
     lineRects[k].width += extensionWidth;
 
   }
+  
+  /* if (currentLineRect && currentLineRect.top !== top) {
+    currentLineRect.width += extensionWidth;
+  } */
   
   return lineRects;
 }
