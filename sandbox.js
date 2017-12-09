@@ -4,26 +4,22 @@ var highlightPane = document.getElementById('highlight-pane');
 var segs = [];
 segs.push.apply(segs, document.getElementsByClassName('seg'));
 
+var segOffsets = [];
+
 var fragment = document.createDocumentFragment();
 
 var extensionWidth = 8;
 
 // ease-in-out (.42,0,.58,1) 30 frames
-var easingMultipliers = [0.00000, 0.00213, 0.00865, 0.01972, 0.03551, 0.05613, 0.08166, 0.11211, 0.14741, 0.18740, 0.23177, 0.28013, 0.33188, 0.38635, 0.44269, 0.50000, 0.55731, 0.61365, 0.66812, 0.71987, 0.76823, 0.81260, 0.85259, 0.88789, 0.91834, 0.94387, 0.96449, 0.98028, 0.99135, 0.99787, 1.00000]
+var easingMultipliers = [0.00213, 0.00865, 0.01972, 0.03551, 0.05613, 0.08166, 0.11211, 0.14741, 0.18740, 0.23177, 0.28013, 0.33188, 0.38635, 0.44269, 0.50000, 0.55731, 0.61365, 0.66812, 0.71987, 0.76823, 0.81260, 0.85259, 0.88789, 0.91834, 0.94387, 0.96449, 0.98028, 0.99135, 0.99787, 1.00000] // 0.00000?
 
-var totalFrames = easingMultipliers.length - 1;
-var currentFrame = 0;
+var totalFrames = easingMultipliers.length; // ...length - 1?
+var currentFrame = -1;
 
-var currentStart;
-var currentEnd;
-
-var initialStart;
-var initialEnd;
-
-var targetStart;
-var targetEnd;
-
-var segOffsets = [];
+var slideHighlight = {
+  start: new SlideLineOffset(0, 0, 0, 0),
+  end: new SlideLineOffset(0, 0, 0, 0)
+}
 
 //
 
@@ -63,6 +59,10 @@ function getLineRectsFromEls(els) {
       
       if (!currentLineRect || currentLineRect.top !== top) {
         
+        /* if (currentLineRect && currentLineRect.top !== top) {
+          currentLineRect.width += extensionWidth;
+        } */
+        
         lineRects.push({
           top: top,
           left: left,
@@ -77,6 +77,10 @@ function getLineRectsFromEls(els) {
         
       }
       
+      // Do two blocks below only if dealing with segs, not note highlights?
+      
+      // And will need to empty segOffsets when calling getLineRectsFromEls()
+      
       if (j === 0) {
         startLine = lineRects.length - 1;
         startOffset = left;
@@ -85,12 +89,12 @@ function getLineRectsFromEls(els) {
       if (j === theseRects.length - 1) {
         endLine = lineRects.length - 1;
         endOffset = currentLineRect.width;
-        segOffsets.push({
+        segOffsets[i] = {
           startLine: startLine,
           startOffset: startOffset,
           endLine: endLine,
           endOffset: endOffset
-        });
+        };
       }
     }
   }
@@ -103,12 +107,10 @@ function getLineRectsFromEls(els) {
 
   }
   
-  /* if (currentLineRect && currentLineRect.top !== top) {
-    currentLineRect.width += extensionWidth;
-  } */
-  
   return lineRects;
 }
+
+// Pass first and last line instead of rects? No slicing, no garbage colleciton of sliced array?
 
 function makeHighlightBoxes(rects, startOffset, endOffset) {
   
@@ -144,69 +146,127 @@ function makeHighlightBoxes(rects, startOffset, endOffset) {
   highlightPane.appendChild(fragment);
 }
 
-/*
+//
 
-function getLineRectsFromRects(rects) {
-  
-  var lineRects = [];
-
-  for (var i = 0; i < rects.length; i++) {
-    currentLineRect = lineRects[lineRects.length - 1];
-    if (!currentLineRect || currentLineRect.top !== rects[i].top) {
-      lineRects.push({
-        top: rects[i].top,
-        left: rects[i].left,
-        width: rects[i].width
-      });
-    } else {
-      currentLineRect.width = rects[i].left + rects[i].width;
-    }
-  }
-
-  for (var i = 0; i < lineRects.length - 1; i++) {
-    lineRects[i].width += extensionWidth;
-  }
-  
-  return lineRects;
+function SlideLineOffset(line, offset, distance, progress) {
+  this.line = line,
+  this.offset = offset,
+  this.distance = distance,
+  this.progress = progress
 }
 
-*/
+// Below could be isAbove, isBefore, isHigher, isFirst, isEarlier...
+
+SlideLineOffset.prototype.isAbove = function(targetLineOffset) {
+  
+  if (this.line < targetLineOffset.line || this.line === targetLineOffset.line && this.offset < targetLineOffset.offset) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+SlideLineOffset.prototype.getDistanceFrom = function(targetLineOffset) {
+  
+  var distance = 0;
+  
+  var aboveLineOffset;
+  var belowLineOffset;
+  
+  var forward = this.isAbove(targetLineOffset);
+  
+  if (forward) {
+    aboveLineOffset = this;
+    belowLineOffset = targetLineOffset;
+  } else {
+    aboveLineOffset = targetLineOffset;
+    belowLineOffset = this;
+  }
+  
+  var i = aboveLineOffset.line;
+  while (i <= belowLineOffset.line) {
+    distance += visLineRects[i].width;
+    i++;
+  }
+  
+  distance -= aboveLineOffset.offset;
+  distance -= visLineRects[belowLineOffset.line].width - belowLineOffset.offset;
+  
+  if (!forward) {
+    distance = -distance;
+  }
+    
+  this.distance = distance;
+}
 
 //
 
-/* function getLineFromPt(line, pt) {
+function getDistanceBetweenOffsets(firstLine, lastLine, firstOffset, lastOffset) { // Defaults? Some optional? Inelegant?
+  
+  var distance = 0;
+  var multiplier = 1;
+  
+  if (lastLine < firstLine || lastLine === firstLine && lastOffset < firstOffset) {
+    
+    // Next two lines swap vars
+    lastLine = firstLine + (firstLine = lastLine, 0);
+    lastOffset = firstOffset + (firstOffset = lastOffset, 0);
+    multiplier = -1;
+    console.log(firstLine, lastLine, firstOffset, lastOffset);
+  }
+  
+  // Better way to do all this without swapping vars?
+  
+  var i = firstLine;
+  while (i <= lastLine) {
+    distance += visLineRects[i].width;
+    i++;
+  }
+  
+  distance -= firstOffset;
+  distance -= visLineRects[lastLine].width - lastOffset;
+  
+  distance = distance * multiplier;
+  
+  return distance;
+}
 
-  if (forward) {
-    
-    while (visLineRects[line].prevDist + visLineRects[line].width <= pt) {
-      line++;
-    }
-    
+function ease(distance, frame) { // Make frame param or global var?
+  return Math.round(distance * easingMultipliers[frame]);
+}
+
+// When not animating, should frame be -1 or 0?
+// Should first change occur in frame 0 or 1?
+
+/*
+Instead of var animating, could use currentFrame?
+
+function beginAnimation() {
+  if (currentFrame > -1) ...
+*/
+
+function beginAnimation() {
+  if (currentFrame > -1) {
+    currentFrame = 0; // ?
   } else {
-
-    while (visLineRects[startLine].prevDist > pt) {
-      line--;
-    }
+    currentFrame = 0; // DRY?
+    requestAnimationFrame(animate);
   }
-  
-  return line;
 }
 
-// Below iterates up from 0 and is probably temporary; above iterates up or down from current line and is propably better but needs (forward) condition replaced
-
-function getLineFromPt(pt) {
-
-  var line = 0;
-    
-  while (visLineRects[line].prevDist + visLineRects[line].width <= pt) {
-    line++;
-  }
+function animate() {
   
-  return line;
+  console.log(currentFrame, easingMultipliers[currentFrame]);
+  
+  if (currentFrame < totalFrames - 1) { // ?
+    currentFrame++; // ?
+    requestAnimationFrame(animate);
+  } else {
+    currentFrame = -1; // ?
+  }
 }
 
-var startLine = 0;
-var endLine = 0;
+/*
 
 function abcd(startPt, endPt) {
   
@@ -269,27 +329,14 @@ function prepAnimation(targetIndex) {
 
 function animate() {
     
-  currentStart = Math.round(ease(initialStart, targetStart));
-  currentEnd = Math.round(ease(initialEnd, targetEnd));
+  currentStart = ease(initialStart, targetStart);
+  currentEnd = ease(initialEnd, targetEnd);
 
   abcd(currentStart, currentEnd);
 
   if (currentFrame < totalFrames) {
     currentFrame += 1;
     requestAnimationFrame(animate);
-  }
-}
-
-function ease(startValue, endValue) {
-  return (endValue - startValue) * easingMultipliers[currentFrame] + startValue;
-}
-
-function cachePrevDist(rects) {
-  
-  rects[0].prevDist = 0;
-  
-  for (var i = 1; i < rects.length; i++) {
-    rects[i].prevDist = rects[i - 1].prevDist + rects[i - 1].width;
   }
 }
 
