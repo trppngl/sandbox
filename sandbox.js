@@ -3,8 +3,15 @@ var highlightPane = document.getElementById('highlight-pane');
 
 var segs = [];
 segs.push.apply(segs, document.getElementsByClassName('seg'));
+var numSegs = segs.length;
 
 var segOffsets = [];
+
+(function () {
+  for (var i = 0; i < numSegs; i += 1) {
+    segs[i].id = i;
+  }
+})();
 
 var fragment = document.createDocumentFragment();
 
@@ -17,9 +24,16 @@ var totalFrames = easingMultipliers.length; // ...length - 1?
 var currentFrame = -1;
 
 var slideHighlight = {
-  start: new SlideLineOffset(0, 0, 0, 0),
-  end: new SlideLineOffset(0, 0, 0, 0)
+  start: new MovingPos(),
+  end: new MovingPos()
 }
+
+var t0 = performance.now();
+
+var visLineRects = getLineRectsFromEls(segs);
+
+var t1 = performance.now();
+console.log((t1 - t0).toFixed(4), 'milliseconds');
 
 //
 
@@ -90,10 +104,14 @@ function getLineRectsFromEls(els) {
         endLine = lineRects.length - 1;
         endOffset = currentLineRect.width;
         segOffsets[i] = {
-          startLine: startLine,
-          startOffset: startOffset,
-          endLine: endLine,
-          endOffset: endOffset
+          start: {
+            line: startLine,
+            offset: startOffset
+          },
+          end: {
+            line: endLine,
+            offset: endOffset
+          }
         };
       }
     }
@@ -148,206 +166,127 @@ function makeHighlightBoxes(rects, startOffset, endOffset) {
 
 //
 
-function SlideLineOffset(line, offset, distance, progress) {
+function MovingPos(line = 0, offset = 0, distance = 0, progress = 0) {
   this.line = line,
   this.offset = offset,
   this.distance = distance,
   this.progress = progress
 }
 
-// Below could be isAbove, isBefore, isHigher, isFirst, isEarlier...
+// isAbove, isBefore, isHigher, isFirst, isEarlier, isUpstreamFrom...
 
-SlideLineOffset.prototype.isAbove = function(targetLineOffset) {
+MovingPos.prototype.isAbove = function(targetPos) {
   
-  if (this.line < targetLineOffset.line || this.line === targetLineOffset.line && this.offset < targetLineOffset.offset) {
+  if (this.line < targetPos.line || this.line === targetPos.line && this.offset < targetPos.offset) {
     return true;
   } else {
     return false;
   }
 }
 
-SlideLineOffset.prototype.getDistanceFrom = function(targetLineOffset) {
+// measureMoveTo, measMoveTo, calcMoveTo, getMoveTo, getChangeTo, getPosChangeTo, calcPosChangeTo, measPosChangeTo, getShiftTo, measShiftTo, calcShiftTo, measSlideTo, measureSlideTo, calcSlideTo, update..., ...displacement...
+
+MovingPos.prototype.prepChangePos = function(targetPos) {
   
+  var forward = this.isAbove(targetPos);
   var distance = 0;
   
-  var aboveLineOffset;
-  var belowLineOffset;
-  
-  var forward = this.isAbove(targetLineOffset);
+  var i;
+  var aboveOffset;
+  var belowLine;
+  var belowOffset;
   
   if (forward) {
-    aboveLineOffset = this;
-    belowLineOffset = targetLineOffset;
+    i = this.line;
+    aboveOffset = this.offset;
+    belowLine = targetPos.line;
+    belowOffset = targetPos.offset;
   } else {
-    aboveLineOffset = targetLineOffset;
-    belowLineOffset = this;
+    i = targetPos.line;
+    aboveOffset = targetPos.offset;
+    belowLine = this.line;
+    belowOffset = this.offset;
   }
   
-  var i = aboveLineOffset.line;
-  while (i <= belowLineOffset.line) {
+  for (i; i <= belowLine; i++) {
     distance += visLineRects[i].width;
-    i++;
   }
   
-  distance -= aboveLineOffset.offset;
-  distance -= visLineRects[belowLineOffset.line].width - belowLineOffset.offset;
+  distance -= aboveOffset + visLineRects[belowLine].width - belowOffset;
   
   if (!forward) {
-    distance = -distance;
+    distance = 0 - distance;
   }
     
   this.distance = distance;
+  this.progress = 0;
+  
+  return this;
+}
+
+MovingPos.prototype.changePos = function(frame) {
+  
+  var increment = Math.round(this.distance * easingMultipliers[frame] - this.progress);
+  
+  this.progress += increment;
+  this.offset += increment;
+  
+  // Start and end should be treated differently by 1px
+  
+  while (this.offset <= 0) {
+    this.line--;
+    this.offset += visLineRects[this.line].width;
+  }
+  
+  while (this.offset > visLineRects[this.line].width) {
+    this.offset -= visLineRects[this.line].width;
+    this.line++;
+  }
+  
+  return this;
+  
 }
 
 //
 
-function getDistanceBetweenOffsets(firstLine, lastLine, firstOffset, lastOffset) { // Defaults? Some optional? Inelegant?
-  
-  var distance = 0;
-  var multiplier = 1;
-  
-  if (lastLine < firstLine || lastLine === firstLine && lastOffset < firstOffset) {
-    
-    // Next two lines swap vars
-    lastLine = firstLine + (firstLine = lastLine, 0);
-    lastOffset = firstOffset + (firstOffset = lastOffset, 0);
-    multiplier = -1;
-    console.log(firstLine, lastLine, firstOffset, lastOffset);
-  }
-  
-  // Better way to do all this without swapping vars?
-  
-  var i = firstLine;
-  while (i <= lastLine) {
-    distance += visLineRects[i].width;
-    i++;
-  }
-  
-  distance -= firstOffset;
-  distance -= visLineRects[lastLine].width - lastOffset;
-  
-  distance = distance * multiplier;
-  
-  return distance;
+function prepAnimate(targetSeg) {
+  // console.log(slideHighlight.start);
+  slideHighlight.start.prepChangePos(targetSeg.start);
+  // console.log(slideHighlight.start);
+  slideHighlight.end.prepChangePos(targetSeg.end);
+  currentFrame = 0;
+  requestAnimationFrame(animate); // Cancel?
 }
 
-function ease(distance, frame) { // Make frame param or global var?
-  return Math.round(distance * easingMultipliers[frame]);
-}
-
-// When not animating, should frame be -1 or 0?
-// Should first change occur in frame 0 or 1?
-
-/*
-Instead of var animating, could use currentFrame?
-
-function beginAnimation() {
-  if (currentFrame > -1) ...
-*/
-
-function beginAnimation() {
-  if (currentFrame > -1) {
-    currentFrame = 0; // ?
-  } else {
-    currentFrame = 0; // DRY?
-    requestAnimationFrame(animate);
-  }
-}
-
-function animate() {
+function animate() { // Clean this up
   
-  console.log(currentFrame, easingMultipliers[currentFrame]);
-  
-  if (currentFrame < totalFrames - 1) { // ?
-    currentFrame++; // ?
+  slideHighlight.start.changePos(currentFrame);
+  slideHighlight.end.changePos(currentFrame);
+  var rects = visLineRects.slice(slideHighlight.start.line, slideHighlight.end.line + 1);
+  var startOffset = slideHighlight.start.offset;
+  var endOffset = slideHighlight.end.offset;
+  makeHighlightBoxes(rects, startOffset, endOffset);
+  // console.log(currentFrame, slideHighlight.start.line, slideHighlight.start.offset, slideHighlight.end.line, slideHighlight.end.offset);
+  if (currentFrame < totalFrames - 1) {
+    currentFrame++
     requestAnimationFrame(animate);
   } else {
-    currentFrame = -1; // ?
+    currentFrame = -1;
   }
 }
 
-/*
+// Event Handlers
 
-function abcd(startPt, endPt) {
+function handleClick(e) {
   
-  var startOffset;
-  var endOffset;
-  var lineRects; // Change?
+  var index;
   
-  // startLine = getLineFromPt(startLine, startPt);
-  // endLine = getLineFromPt(endLine, endPt - 1);
-  
-  startLine = getLineFromPt(startPt);
-  endLine = getLineFromPt(endPt - 1);
-  
-  startOffset = startPt - visLineRects[startLine].prevDist;
-  endOffset = endPt - visLineRects[endLine].prevDist;
-  
-  console.log('Start line: ' + startLine);
-  console.log('Start offset: ' + startOffset);
-  console.log('End line: ' + endLine);
-  console.log('End offset: ' + endOffset);
-  
-  if (endLine < visLineRects.length - 1) {
-    lineRects = visLineRects.slice(startLine, endLine + 1);
-  } else {
-    lineRects = visLineRects.slice(startLine);
-  }
-  
-  makeHighlightBoxes(lineRects, startOffset, endOffset);
-  
-}
-
-// Adapted from trippingly.js
-
-function startSeg(targetIndex) {
-  currentFrame = 1;
-  prepAnimation(targetIndex);
-  animating = true;
-}
-
-function prepAnimation(targetIndex) {
-  
-  var targetSeg = segs[targetIndex];
-  var targetSegRect = targetSeg.getBoundingClientRect();
-  
-  targetStart = target
-  targetEnd = 
-  
-  initialStart = currentStart // ?
-  initialEnd = currentEnd // ?
-  
-  //
-  
-  startTop = highlight.offsetTop;
-  startHt = highlight.clientHeight;
-  
-  var seg = segs[currentIndex];
-  endTop = seg.offsetTop;
-  endHt = seg.clientHeight;
-}
-
-function animate() {
-    
-  currentStart = ease(initialStart, targetStart);
-  currentEnd = ease(initialEnd, targetEnd);
-
-  abcd(currentStart, currentEnd);
-
-  if (currentFrame < totalFrames) {
-    currentFrame += 1;
-    requestAnimationFrame(animate);
+  if (e.target.classList.contains('seg')) {
+    index = Number(e.target.getAttribute('id'));
+    prepAnimate(segOffsets[index]);
   }
 }
 
-*/
+// Event Listeners
 
-//
-
-var t0 = performance.now();
-
-var visLineRects = getLineRectsFromEls(segs);
-
-var t1 = performance.now();
-console.log((t1 - t0).toFixed(4), 'milliseconds');
-
+column.addEventListener('click', handleClick, false); // document?

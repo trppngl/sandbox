@@ -20,7 +20,7 @@ body {
 }
 
 .seg {
-  background: hsla(43, 100%, 50%, 0.1);
+  /*background: hsla(43, 100%, 50%, 0.1);*/
 }
 
 ::-moz-selection {
