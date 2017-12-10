@@ -13,8 +13,6 @@ var segOffsets = [];
   }
 })();
 
-var request;
-
 var fragment = document.createDocumentFragment();
 
 var extensionWidth = 8;
@@ -35,7 +33,11 @@ var t0 = performance.now();
 var visLineRects = getLineRectsFromEls(segs);
 
 var t1 = performance.now();
-console.log((t1 - t0).toFixed(4), 'milliseconds');
+console.log((t1 - t0).toFixed(3), 'milliseconds');
+
+var request;
+
+var frameTimes = []; //
 
 //
 
@@ -130,8 +132,6 @@ function getLineRectsFromEls(els) {
   return lineRects;
 }
 
-// Pass first and last line instead of rects? No slicing, no garbage colleciton of sliced array?
-
 function makeHighlightBoxes(rects, startOffset, endOffset) {
   
   var box;
@@ -174,8 +174,6 @@ function MovingPos(line = 0, offset = 0, distance = 0, progress = 0) {
   this.distance = distance,
   this.progress = progress
 }
-
-// isAbove, isBefore, isHigher, isFirst, isEarlier, isUpstreamFrom...
 
 MovingPos.prototype.isAbove = function(targetPos) {
   
@@ -239,11 +237,13 @@ MovingPos.prototype.changePos = function(frame, end) {
   this.progress += increment;
   this.offset += increment;
   
+  // When going backward, nudge makes it so start offset = 0 remains on that line, end offset = 0 moves up a line
   while (this.line > 0 && this.offset + nudge < 0) {
     this.line--;
     this.offset += visLineRects[this.line].width;
   }
   
+  // When going forward, nudge makes it so start offset = line width moves down a line, end offset = line width remains on that line
   while (this.line < visLineRects.length - 1 && this.offset + nudge >= visLineRects[this.line].width) {
     this.offset -= visLineRects[this.line].width;
     this.line++;
@@ -255,10 +255,10 @@ MovingPos.prototype.changePos = function(frame, end) {
 //
 
 function prepAnimate(targetSeg) {
-  // console.log(slideHighlight.start);
+  
   slideHighlight.start.getDistanceTo(targetSeg.start);
-  // console.log(slideHighlight.start);
-  slideHighlight.end.getDistanceTo(targetSeg.end, true);
+  slideHighlight.end.getDistanceTo(targetSeg.end);
+  
   currentFrame = 0;
   cancelAnimationFrame(request);
   request = requestAnimationFrame(animate); // Cancel?
@@ -266,19 +266,28 @@ function prepAnimate(targetSeg) {
 
 function animate() { // Clean this up
   
+  var t0 = performance.now(); //
+  
   slideHighlight.start.changePos(currentFrame);
-  slideHighlight.end.changePos(currentFrame);
+  slideHighlight.end.changePos(currentFrame, true);
+  
   var rects = visLineRects.slice(slideHighlight.start.line, slideHighlight.end.line + 1);
   var startOffset = slideHighlight.start.offset;
   var endOffset = slideHighlight.end.offset;
+  
   makeHighlightBoxes(rects, startOffset, endOffset);
+  
   console.log(currentFrame, slideHighlight.start.line, slideHighlight.start.offset, slideHighlight.end.line, slideHighlight.end.offset);
+  
   if (currentFrame < totalFrames - 1) {
     currentFrame++
     request = requestAnimationFrame(animate);
   } else {
     currentFrame = -1;
   }
+  
+  var t1 = performance.now(); //
+  frameTimes.push((t1 - t0).toFixed(3)); //
 }
 
 // Event Handlers
