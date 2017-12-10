@@ -13,6 +13,8 @@ var segOffsets = [];
   }
 })();
 
+var request;
+
 var fragment = document.createDocumentFragment();
 
 var extensionWidth = 8;
@@ -184,9 +186,7 @@ MovingPos.prototype.isAbove = function(targetPos) {
   }
 }
 
-// measureMoveTo, measMoveTo, calcMoveTo, getMoveTo, getChangeTo, getPosChangeTo, calcPosChangeTo, measPosChangeTo, getShiftTo, measShiftTo, calcShiftTo, measSlideTo, measureSlideTo, calcSlideTo, update..., ...displacement...
-
-MovingPos.prototype.prepChangePos = function(targetPos) {
+MovingPos.prototype.getDistanceTo = function(targetPos) {
   
   var forward = this.isAbove(targetPos);
   var distance = 0;
@@ -224,38 +224,44 @@ MovingPos.prototype.prepChangePos = function(targetPos) {
   return this;
 }
 
-MovingPos.prototype.changePos = function(frame) {
+MovingPos.prototype.changePos = function(frame, end) {
   
   var increment = Math.round(this.distance * easingMultipliers[frame] - this.progress);
+  
+  var nudge; // Rename?
+  
+  if (end) {
+    nudge = -1;
+  } else {
+    nudge = 0;
+  }
   
   this.progress += increment;
   this.offset += increment;
   
-  // Start and end should be treated differently by 1px
-  
-  while (this.offset <= 0) {
+  while (this.line > 0 && this.offset + nudge < 0) {
     this.line--;
     this.offset += visLineRects[this.line].width;
   }
   
-  while (this.offset > visLineRects[this.line].width) {
+  while (this.line < visLineRects.length - 1 && this.offset + nudge >= visLineRects[this.line].width) {
     this.offset -= visLineRects[this.line].width;
     this.line++;
   }
   
   return this;
-  
 }
 
 //
 
 function prepAnimate(targetSeg) {
   // console.log(slideHighlight.start);
-  slideHighlight.start.prepChangePos(targetSeg.start);
+  slideHighlight.start.getDistanceTo(targetSeg.start);
   // console.log(slideHighlight.start);
-  slideHighlight.end.prepChangePos(targetSeg.end);
+  slideHighlight.end.getDistanceTo(targetSeg.end, true);
   currentFrame = 0;
-  requestAnimationFrame(animate); // Cancel?
+  cancelAnimationFrame(request);
+  request = requestAnimationFrame(animate); // Cancel?
 }
 
 function animate() { // Clean this up
@@ -266,10 +272,10 @@ function animate() { // Clean this up
   var startOffset = slideHighlight.start.offset;
   var endOffset = slideHighlight.end.offset;
   makeHighlightBoxes(rects, startOffset, endOffset);
-  // console.log(currentFrame, slideHighlight.start.line, slideHighlight.start.offset, slideHighlight.end.line, slideHighlight.end.offset);
+  console.log(currentFrame, slideHighlight.start.line, slideHighlight.start.offset, slideHighlight.end.line, slideHighlight.end.offset);
   if (currentFrame < totalFrames - 1) {
     currentFrame++
-    requestAnimationFrame(animate);
+    request = requestAnimationFrame(animate);
   } else {
     currentFrame = -1;
   }
