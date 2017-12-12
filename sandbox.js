@@ -5,7 +5,7 @@ var segs = [];
 segs.push.apply(segs, document.getElementsByClassName('seg'));
 var numSegs = segs.length;
 
-var segOffsets = [];
+var segPositions = [];
 
 (function () {
   for (var i = 0; i < numSegs; i += 1) {
@@ -97,7 +97,7 @@ function getLineRectsFromEls(els) {
       
       // Do two blocks below only if dealing with segs, not note highlights?
       
-      // And will need to empty segOffsets when calling getLineRectsFromEls()
+      // And will need to empty segPositions when calling getLineRectsFromEls()
       
       if (j === 0) {
         startLine = lineRects.length - 1;
@@ -107,7 +107,7 @@ function getLineRectsFromEls(els) {
       if (j === theseRects.length - 1) {
         endLine = lineRects.length - 1;
         endOffset = currentLineRect.width;
-        segOffsets[i] = {
+        segPositions[i] = {
           start: {
             line: startLine,
             offset: startOffset
@@ -132,26 +132,29 @@ function getLineRectsFromEls(els) {
   return lineRects;
 }
 
-function makeHighlightBoxes(rects, startOffset, endOffset) {
+function makeHighlightBoxes(segPos) {
   
   var box;
   var top;
   var left;
   var width;
+  var thisVisLineRect;
   
-  for (var i = rects.length - 1; i >= 0; i--) {
+  for (var i = segPos.end.line; i >= segPos.start.line; i--) {
     
-    top = rects[i].top;
-    left = rects[i].left;
-    width = rects[i].width;
+    thisVisLineRect = visLineRects[i];
     
-    if (endOffset && i === rects.length - 1) {
-      width = endOffset;
+    top = thisVisLineRect.top;
+    left = thisVisLineRect.left;
+    width = thisVisLineRect.width;
+    
+    if (i === segPos.end.line) {
+      width = segPos.end.offset;
     }
     
-    if (startOffset && i === 0) {
-      left += startOffset;
-      width -= startOffset;
+    if (i === segPos.start.line) {
+      left += segPos.start.offset;
+      width -= segPos.start.offset;
     }
     
     box = document.createElement('div');
@@ -222,13 +225,13 @@ MovingPos.prototype.getDistanceTo = function(targetPos) {
   return this;
 }
 
-MovingPos.prototype.changePos = function(frame, end) {
+MovingPos.prototype.changePos = function(frame, isEnd) {
   
   var increment = Math.round(this.distance * easingMultipliers[frame] - this.progress);
   
   var nudge; // Rename?
   
-  if (end) {
+  if (isEnd) {
     nudge = -1;
   } else {
     nudge = 0;
@@ -254,14 +257,14 @@ MovingPos.prototype.changePos = function(frame, end) {
 
 //
 
-function prepAnimate(targetSeg) {
+function playSeg(targetSegPos) {
   
-  slideHighlight.start.getDistanceTo(targetSeg.start);
-  slideHighlight.end.getDistanceTo(targetSeg.end);
+  slideHighlight.start.getDistanceTo(targetSegPos.start);
+  slideHighlight.end.getDistanceTo(targetSegPos.end);
   
   currentFrame = 0;
   cancelAnimationFrame(request);
-  request = requestAnimationFrame(animate); // Cancel?
+  request = requestAnimationFrame(animate);
 }
 
 function animate() { // Clean this up
@@ -271,13 +274,7 @@ function animate() { // Clean this up
   slideHighlight.start.changePos(currentFrame);
   slideHighlight.end.changePos(currentFrame, true);
   
-  var rects = visLineRects.slice(slideHighlight.start.line, slideHighlight.end.line + 1);
-  var startOffset = slideHighlight.start.offset;
-  var endOffset = slideHighlight.end.offset;
-  
-  makeHighlightBoxes(rects, startOffset, endOffset);
-  
-  console.log(currentFrame, slideHighlight.start.line, slideHighlight.start.offset, slideHighlight.end.line, slideHighlight.end.offset);
+  makeHighlightBoxes(slideHighlight); // Or pass start, end?
   
   if (currentFrame < totalFrames - 1) {
     currentFrame++
@@ -288,6 +285,7 @@ function animate() { // Clean this up
   
   var t1 = performance.now(); //
   frameTimes.push((t1 - t0).toFixed(3)); //
+  
 }
 
 // Event Handlers
@@ -298,10 +296,15 @@ function handleClick(e) {
   
   if (e.target.classList.contains('seg')) {
     index = Number(e.target.getAttribute('id'));
-    prepAnimate(segOffsets[index]);
+    playSeg(segPositions[index]);
   }
 }
 
 // Event Listeners
 
 column.addEventListener('click', handleClick, false); // document?
+
+//
+
+// console.log(currentFrame, slideHighlight.start.line, slideHighlight.start.offset, slideHighlight.end.line, slideHighlight.end.offset);
+
