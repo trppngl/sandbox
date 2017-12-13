@@ -1,5 +1,5 @@
 body {
-  font-family: Linux Libertine;
+  font-family: Linux Libertine, serif;
   font-size: 30px;
   color: rgba(0, 0, 0, 0.93);
   line-height: 46.67px;
@@ -9,6 +9,7 @@ body {
   width: 500px;
   margin: 0 auto;
   position: relative;
+  visibility: hidden; /**/
 }
 
 #highlight-pane {

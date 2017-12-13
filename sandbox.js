@@ -5,7 +5,7 @@ var segs = [];
 segs.push.apply(segs, document.getElementsByClassName('seg'));
 var numSegs = segs.length;
 
-var segPositions = [];
+var segRanges = [];
 
 (function () {
   for (var i = 0; i < numSegs; i += 1) {
@@ -97,7 +97,7 @@ function getLineRectsFromEls(els) {
       
       // Do two blocks below only if dealing with segs, not note highlights?
       
-      // And will need to empty segPositions when calling getLineRectsFromEls()
+      // And will need to empty segRanges when calling getLineRectsFromEls()
       
       if (j === 0) {
         startLine = lineRects.length - 1;
@@ -107,7 +107,10 @@ function getLineRectsFromEls(els) {
       if (j === theseRects.length - 1) {
         endLine = lineRects.length - 1;
         endOffset = currentLineRect.width;
-        segPositions[i] = {
+        
+        // segRanges[i] = new LineRange(startLine, startOffset, endLine, endOffset);
+        
+        segRanges[i] = {
           start: {
             line: startLine,
             offset: startOffset
@@ -119,6 +122,7 @@ function getLineRectsFromEls(els) {
         };
       }
     }
+    column.style.visibility = 'visible'; //
   }
   
   // Could make this a separate function and call from here
@@ -132,29 +136,29 @@ function getLineRectsFromEls(els) {
   return lineRects;
 }
 
-function makeHighlightBoxes(segPos) {
+function makeHighlightBoxes(lineRange) {
   
   var box;
   var top;
   var left;
   var width;
-  var thisVisLineRect;
+  var thisLineRect;
   
-  for (var i = segPos.end.line; i >= segPos.start.line; i--) {
+  for (var i = lineRange.end.line; i >= lineRange.start.line; i--) {
     
-    thisVisLineRect = visLineRects[i];
+    thisLineRect = visLineRects[i];
     
-    top = thisVisLineRect.top;
-    left = thisVisLineRect.left;
-    width = thisVisLineRect.width;
+    top = thisLineRect.top;
+    left = thisLineRect.left;
+    width = thisLineRect.width;
     
-    if (i === segPos.end.line) {
-      width = segPos.end.offset;
+    if (i === lineRange.end.line) {
+      width = lineRange.end.offset;
     }
     
-    if (i === segPos.start.line) {
-      left += segPos.start.offset;
-      width -= segPos.start.offset;
+    if (i === lineRange.start.line) {
+      left += lineRange.start.offset;
+      width -= lineRange.start.offset;
     }
     
     box = document.createElement('div');
@@ -170,6 +174,20 @@ function makeHighlightBoxes(segPos) {
 }
 
 //
+
+// Are Pos and LineRange constructors useful? Use object literals instead?
+
+/*
+function Pos(line = 0, offset = 0) {
+  this.line = line,
+  this.offset = offset
+}
+
+function LineRange(startLine = 0, startOffset = 0, endLine = 0, endOffset = 0) {
+  this.start = new Pos(startLine, startOffset),
+  this.end = new Pos(endLine, endOffset)
+}
+*/
 
 function MovingPos(line = 0, offset = 0, distance = 0, progress = 0) {
   this.line = line,
@@ -257,10 +275,10 @@ MovingPos.prototype.changePos = function(frame, isEnd) {
 
 //
 
-function playSeg(targetSegPos) {
+function playSeg(targetSegRange) {
   
-  slideHighlight.start.getDistanceTo(targetSegPos.start);
-  slideHighlight.end.getDistanceTo(targetSegPos.end);
+  slideHighlight.start.getDistanceTo(targetSegRange.start);
+  slideHighlight.end.getDistanceTo(targetSegRange.end);
   
   currentFrame = 0;
   cancelAnimationFrame(request);
@@ -296,7 +314,7 @@ function handleClick(e) {
   
   if (e.target.classList.contains('seg')) {
     index = Number(e.target.getAttribute('id'));
-    playSeg(segPositions[index]);
+    playSeg(segRanges[index]);
   }
 }
 
