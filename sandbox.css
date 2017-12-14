@@ -9,7 +9,6 @@ body {
   max-width: 500px;
   margin: 0 auto;
   position: relative;
-  visibility: hidden; /**/
 }
 
 #highlight-pane {

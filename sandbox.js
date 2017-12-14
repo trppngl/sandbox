@@ -122,7 +122,7 @@ function getLineRectsFromEls(els) {
         };
       }
     }
-    column.style.visibility = 'visible'; //
+    document.getElementById('test').classList.add('hide');
   }
   
   // Could make this a separate function and call from here
