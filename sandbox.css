@@ -53,6 +53,7 @@ body {
   font-size: 30px;
   color: rgba(0, 0, 0, 0.93);
   line-height: 46.67px;
+  font-feature-settings: 'liga' 1;
 }
 
 #column {
