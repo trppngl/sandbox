@@ -122,7 +122,6 @@ function getLineRectsFromEls(els) {
         };
       }
     }
-    document.getElementById('test').classList.add('hide');
   }
   
   // Could make this a separate function and call from here
@@ -285,9 +284,7 @@ function playSeg(targetSegRange) {
   request = requestAnimationFrame(animate);
 }
 
-function animate() { // Clean this up
-  
-  var t0 = performance.now(); //
+function animate() {
   
   slideHighlight.start.changePos(currentFrame);
   slideHighlight.end.changePos(currentFrame, true);
@@ -300,10 +297,6 @@ function animate() { // Clean this up
   } else {
     currentFrame = -1;
   }
-  
-  var t1 = performance.now(); //
-  frameTimes.push((t1 - t0).toFixed(3)); //
-  
 }
 
 // Event Handlers

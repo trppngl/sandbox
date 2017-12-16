@@ -1,3 +1,33 @@
+@font-face {
+    font-family: 'Linux Libertine'; /* normal */
+    src: url('/static/fonts/linux-libertine/LinLibertine_R.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Linux Libertine'; /* italic */
+    src: url('/static/fonts/linux-libertine/LinLibertine_RI.woff') format('woff');
+    font-weight: normal;
+    font-style: italic;
+}
+
+/* Might want intermediate weight */
+
+@font-face {
+    font-family: 'Linux Libertine'; /* bold */
+    src: url('/static/fonts/linux-libertine/LinLibertine_RB.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Linux Libertine'; /* bold */
+    src: url('/static/fonts/linux-libertine/LinLibertine_RBI.woff') format('woff');
+    font-weight: bold;
+    font-style: italic;
+}
+
 body {
   font-family: Linux Libertine, serif;
   font-size: 30px;
@@ -20,7 +50,7 @@ body {
 }
 
 .seg {
-  /*background: hsla(43, 100%, 50%, 0.1);*/
+  background: hsla(43, 100%, 50%, 0.1);
 }
 
 ::-moz-selection {
@@ -38,4 +68,14 @@ body {
 
 .hide {
   display: none;
+}
+
+.backdrop {
+  position: absolute;
+  display: inline-block;
+  left: 0;
+  background: hsla(43, 100%, 50%, 0.1);
+  height: 46.67px;
+  width: 100%;
+  z-index: -1;
 }
