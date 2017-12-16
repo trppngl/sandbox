@@ -1,35 +1,55 @@
-@font-face {
-    font-family: 'Linux Libertine'; /* normal */
+/* @font-face {
+    font-family: 'Linux Libertine';
     src: url('fonts/LinLibertine_R.woff') format('woff');
     font-weight: normal;
     font-style: normal;
 }
 
 @font-face {
-    font-family: 'Linux Libertine'; /* italic */
+    font-family: 'Linux Libertine';
     src: url('fonts/LinLibertine_RI.woff') format('woff');
     font-weight: normal;
     font-style: italic;
 }
 
-/* Might want intermediate weight */
-
 @font-face {
-    font-family: 'Linux Libertine'; /* bold */
-    src: url('fonts/LinLibertine_RB.woff') format('woff');
-    font-weight: bold;
+    font-family: 'Linux Libertine';
+    src: url('fonts/LinLibertine_RZ.woff') format('woff');
+    font-weight: 600;
     font-style: normal;
 }
 
 @font-face {
-    font-family: 'Linux Libertine'; /* bold */
-    src: url('fonts/LinLibertine_RBI.woff') format('woff');
-    font-weight: bold;
+    font-family: 'Linux Libertine';
+    src: url('fonts/LinLibertine_RZI.woff') format('woff');
+    font-weight: 600;
     font-style: italic;
 }
 
+@font-face {
+    font-family: 'Linux Libertine';
+    src: url('fonts/LinLibertine_RB.woff') format('woff');
+    font-weight: 700;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Linux Libertine';
+    src: url('fonts/LinLibertine_RBI.woff') format('woff');
+    font-weight: 700;
+    font-style: italic;
+}
+
+strong {
+  font-weight: 600;
+} */
+
+/* For now, including both both and semibold and setting strong to use semibold */
+
+/* Neither @font-face nor WOFF supported by Opera Mini (~3% global usage). Problem? */
+
 body {
-  font-family: 'Linux Libertine', serif;
+  font-family: 'Linux Libertine';
   font-size: 30px;
   color: rgba(0, 0, 0, 0.93);
   line-height: 46.67px;
@@ -50,7 +70,7 @@ body {
 }
 
 .seg {
-  background: hsla(43, 100%, 50%, 0.1);
+  /* background: hsla(43, 100%, 50%, 0.1); */
 }
 
 ::-moz-selection {
