@@ -8,27 +8,27 @@ body {
 
 #column {
   position: relative;
-  max-width: 480px;
-  margin: 10px auto;
+  max-width: 484px;
+  margin: 11px auto;
   /*background-image: linear-gradient(#eee 1px, transparent 1px);
-  background-size: 100% 6.3848px;
+  background-size: 100% 11px;
   box-shadow: 1px 0 #eee, -1px 0 #eee;*/
 }
 
 .text-p {
-  font-size: 28px;
-  line-height: 44.6934px; /* 1.5962em = 44.6934px, either works */
-}
-
-.text-seg {
-  padding: 6.3848px 0;
+  font-size: 29px;
+  line-height: 44px;
 }
 
 .note {
-  text-align: left;
-  font-size: 20px;
-  line-height: 38.3086px; /* 5/7 = 31.9238px, 6/7 = 38.3086px */
-  margin: 0 20px; /* Margin or padding? */
+  font-size: 22px;
+  line-height: 33px;
+  padding: 27.5px 22px;
+}
+
+.note span {
+  background: hsla(43, 100%, 50%, 0.1);
+  padding: 4px 0;
 }
 
 .hide {
@@ -45,4 +45,17 @@ body {
 
 .paint {
   background: hsla(250, 100%, 50%, 0.055);
+}
+
+.backdrop {
+  position: absolute;
+  z-index: -1;
+}
+
+#sentence1 {
+  padding-left: 139px;
+}
+
+#sentence2 {
+  padding-left: 260px;
 }
