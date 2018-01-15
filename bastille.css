@@ -2,8 +2,9 @@ body {
   background: #fff;
   color: rgba(0, 0, 0, 0.93);
   font-family: 'Linux Libertine', serif;
+  -webkit-font-feature-settings: 'kern', 'liga', 'clig', 'onum' 1;
   font-feature-settings: 'kern', 'liga', 'clig', 'onum' 1; /* ? */
-  margin: 0;
+  margin: 0; /* ? */
 }
 
 #column {
@@ -15,24 +16,75 @@ body {
   box-shadow: 1px 0 #eee, -1px 0 #eee;*/
 }
 
-.text-p {
+.sentence {
   font-size: 29px;
   line-height: 44px;
+  /*padding: 5.5px 0;*/
+}
+
+.backdrop {
+  position: absolute;
+  width: 100%;
+  z-index: -1;
+}
+
+#backdrop0 {
+  top: 6px;
+  height: 121px;
 }
 
 .note {
   font-size: 22px;
   line-height: 33px;
-  padding: 27.5px 22px;
+  margin: 27.5px 22px; /* 5.5 = 11/2, 27.5 halfway b/w 22 and 33 */
 }
 
-.note span {
-  background: hsla(43, 100%, 50%, 0.1);
-  padding: 4px 0;
+.indent {
+  display: inline-block;
 }
 
-.hide {
-  display: none;
+#indent1 {
+  width: 132px; /* 139 - 7 */
+}
+
+#indent2 {
+  width: 253px; /* 260 - 7 */
+}
+
+.switch {
+  background: hsla(250, 100%, 50%, 0.055);
+  position: absolute;
+  height: 33px;
+}
+
+#switch0 {
+  top: 0px;
+  left: 90px;
+  width: 86px;
+}
+
+#switch1 {
+  top: 0px;
+  left: 399px;
+  width: 65px;
+}
+
+#switch2 {
+  top: 44px;
+  left: 205px;
+  width: 223px;
+}
+
+#switch3 {
+  top: 88px;
+  left: 0px;
+  width: 126px;
+}
+
+#switch4 {
+  top: 88px;
+  left: 65px;
+  width: 61px;
 }
 
 ::-moz-selection {
@@ -43,19 +95,10 @@ body {
   background: rgba(50, 50, 50, 0.08);
 }
 
+.hide {
+  display: none;
+}
+
 .paint {
   background: hsla(250, 100%, 50%, 0.055);
-}
-
-.backdrop {
-  position: absolute;
-  z-index: -1;
-}
-
-#sentence1 {
-  padding-left: 139px;
-}
-
-#sentence2 {
-  padding-left: 260px;
 }
