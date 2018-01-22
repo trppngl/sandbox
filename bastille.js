@@ -1,24 +1,54 @@
+'use strict';
+
 var column = document.getElementById('column');
 
+var t0 = performance.now();
+
 var sentences = [];
-sentences.push.apply(sentences, document.getElementsByClassName('sentence'));
-var numSentences = sentences.length;
+var firstSegs = [];
+var notecards = [];
+var notecardSentences = [];
+var numSentences = 0;
 
-var firstSegs = Array(numSentences);
-for (var i = 0; i < numSentences; i++) {
-  firstSegs[i] = sentences[i].firstElementChild;
-}
+(function () { // Will need to modify to handle multiple grafs
+  
+  var el = document.getElementById('sentence0');
+  
+  while (el) {
+    
+    if (el.tagName === 'SPAN') {
+      
+      sentences.push(el);
+      firstSegs.push(el.firstElementChild); // IE9+
+      numSentences++;
+      
+    } else {
+      
+      notecards.push(el);
+      notecardSentences.push(numSentences - 1);
+    }
+    
+    el = el.nextElementSibling; // IE9+
+  }
+})();
 
-var indents = Array(numSentences);
+var t1 = performance.now();
+console.log((t1 - t0).toFixed(3) + "ms");
+
+var indents = new Array(numSentences);
 
 //
 
 function show(el) {
-  if (el) el.classList.remove('hide');
+  if (el) {
+    el.classList.remove('hide');
+  }
 }
 
 function hide(el) {
-  if (el) el.classList.add('hide');
+  if (el) {
+    el.classList.add('hide');
+  }
 }
 
 function getColumnLeft() {
@@ -36,7 +66,10 @@ function getIndents() {
   }
 }
 
-var t0 = performance.now();
 getIndents();
+
+/*
+var t0 = performance.now();
 var t1 = performance.now();
 console.log((t1 - t0).toFixed(3) + "ms");
+*/
