@@ -12,27 +12,62 @@ var cardEls = [];
 var prevSentenceIndexes = [];
 var numSentences = 0;
 
-(function () { // Will need to modify to handle multiple grafs
+(function () {
   
-  var el = document.getElementById('sentence0');
+  var paragraphs = document.getElementsByClassName('paragraph');
+  var el;
   
-  while (el) {
+  for (var i = 0; i < paragraphs.length; i++) {
     
-    if (el.tagName === 'SPAN') {
+    el = paragraphs[i].firstElementChild; // IE9+
+    
+    while (el) {
       
-      sentenceEls.push(el);
-      firstSegEls.push(el.firstElementChild); // IE9+
-      numSentences++;
+      if (el.tagName === 'SPAN') {
+        
+        sentenceEls.push(el);
+        firstSegEls.push(el.firstElementChild); // IE9+
+        numSentences++;
+        
+      } else {
+        
+        cardEls.push(el);
+        prevSentenceIndexes.push(numSentences - 1);
+      }
       
-    } else {
-      
-      cardEls.push(el);
-      prevSentenceIndexes.push(numSentences - 1);
+      el = el.nextElementSibling; // IE9+
     }
-    
-    el = el.nextElementSibling; // IE9+
   }
 })();
+
+/*(function () {
+  
+  var paragraphs = document.getElementsByClassName('paragraph');
+  var theseChildren;
+  var el;
+  
+  for (var i = 0; i < paragraphs.length; i++) {
+    
+    theseChildren = paragraphs[i].children; // IE9+
+    
+    for (var j = 0; j < theseChildren.length; j++) {
+      
+      el = theseChildren[j];
+      
+      if (el.tagName === 'SPAN') {
+        
+        sentenceEls.push(el);
+        firstSegEls.push(el.firstElementChild); // IE9+
+        numSentences++;
+        
+      } else {
+        
+        cardEls.push(el);
+        prevSentenceIndexes.push(numSentences - 1);
+      }
+    }
+  }
+})();*/
 
 var t1 = performance.now();
 console.log((t1 - t0).toFixed(3) + "ms");

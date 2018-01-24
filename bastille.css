@@ -107,12 +107,13 @@ body {
   float: right;
 }
 
-.headword {
+.headword-bar {
   padding: 0 0 11px 0;
 }
 
-.head {
+.headword {
   font-size: 25px;
+  line-height: 33px;
 }
 
 .bold {
