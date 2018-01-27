@@ -1,21 +1,16 @@
 'use strict';
 
-var t0;
-var t1;
-var t2;
-var t3;
+var t0; // Temp
+var t1; // Temp
 
 var columnEl = document.getElementById('column');
-var topPaneEl = document.getElementById('top-pane');
 
 var currentCardIndex;
 
 t0 = performance.now();
 
-var backdropEls = document.getElementsByClassName('backdrop');
-
 var sentenceEls = [];
-var firstSegEls = [];
+/*var firstSegEls = [];*/
 var cardEls = [];
 var prevSentenceIndexes = [];
 var numSentences = 0;
@@ -34,7 +29,7 @@ var numSentences = 0;
       if (el.tagName === 'SPAN') {
         
         sentenceEls.push(el);
-        firstSegEls.push(el.firstElementChild); // IE9+
+        /*firstSegEls.push(el.firstElementChild); // IE9+*/
         numSentences++;
         
       } else {
@@ -154,14 +149,14 @@ function getOffsets() { // Separate functions for top and left?
 
 //
 
-function getIndentsResizeBackdrops() { // Combined two functions
+/*function getIndentsResizeBackdrops() { // Combined two functions
   
   var offsets = getOffsets();
   var rects = [];
   
   for (var i = 0; i < numSentences; i++) {
     
-    indents[i] = firstSegEls[i].getClientRects()[0].left - offsets.left;
+    indents[i] = sentenceEls[i].getClientRects()[0].left - offsets.left;
     
     rects[i] = sentenceEls[i].getBoundingClientRect();
   }
@@ -171,16 +166,16 @@ function getIndentsResizeBackdrops() { // Combined two functions
     backdropEls[i].style.top = rects[i].top - offsets.top + 'px';
     backdropEls[i].style.height = rects[i].height + 'px';
   }
-}
+}*/
 
-/*function getIndents() { // Close and reopen current card (if any)?
+function getIndents() { // Close and reopen current card (if any)?
   
   var offsets = getOffsets();
   
   for (var i = 0; i < numSentences; i++) {
-    indents[i] = firstSegEls[i].getClientRects()[0].left - offsets.left;
+    indents[i] = sentenceEls[i].getClientRects()[0].left - offsets.left;
   }
-}*/
+}
 
 /*function resizeBackdrops() {
   
@@ -209,33 +204,14 @@ function getIndentsResizeBackdrops() { // Combined two functions
 
 t0 = performance.now();
 
-getIndentsResizeBackdrops();
+getIndents();
 
 t1 = performance.now();
-console.log('getIndentsResizeBackdrops(): ' + (t1 - t0).toFixed(3) + 'ms');
+console.log('getIndents(): ' + (t1 - t0).toFixed(3) + 'ms');
 
 // Event handlers
 
 function handleClick(e) {
-
-  var xPos;
-  var yPos;
-  var element;
-  
-  hide(topPaneEl);
-  
-  xPos = e.clientX;
-  yPos = e.clientY;
-  element = document.elementFromPoint(xPos, yPos);
-  
-  show(topPaneEl);
-  
-  if (element.classList.contains('highlight')) {
-    element.classList.toggle('clicked');
-  }
-  
-  console.log('x: ' + xPos, 'y: ' + yPos);
-  console.log(element);
 }
 
 // Event listeners

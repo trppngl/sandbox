@@ -17,6 +17,7 @@ body {
 }
 
 .sentence {
+  position: relative;
   font-size: 29px;
   line-height: 44px;
   padding: 5.5px 0;
@@ -26,48 +27,6 @@ body {
   font-size: 22px;
   line-height: 33px;
   margin: 27.5px 22px; /* 5.5 = 11/2, 27.5 halfway b/w 22 and 33 */
-}
-
-.backdrop {
-  position: absolute;
-  width: 484px;
-  z-index: -1;
-}
-
-.highlight {
-  background: hsla(250, 100%, 50%, 0.055);
-  position: absolute;
-  height: 33px;
-}
-
-#highlight0 {
-  top: 5.5px;
-  left: 90px;
-  width: 86px;
-}
-
-#highlight1 {
-  top: 5.5px;
-  left: 399px;
-  width: 65px;
-}
-
-#highlight2 {
-  top: 49.5px;
-  left: 205px;
-  width: 223px;
-}
-
-#highlight3 {
-  top: 93.5px;
-  left: 0px;
-  width: 126px;
-}
-
-#highlight4 {
-  top: 93.5px;
-  left: 65px;
-  width: 61px;
 }
 
 ::-moz-selection {
@@ -103,10 +62,24 @@ body {
   font-weight: 600;
 }
 
-.sentence {
-  pointer-events: none;
+.highlight {
+  display: inline-block;
+  position: absolute;
+  background: hsla(250, 100%, 50%, 0.055);
+  height: 33px;
+  z-index: -1;
+  margin: 5.5px 0;
+  top: 0;
 }
 
-.clicked {
-  background: hsla(43, 100%, 50%, 0.1);
+#highlight0 {
+  top: 44px;
+  left: -100px;
+  width: 100px;
+}
+
+#highlight1 {
+  top: 88px;
+  left: -148px;
+  width: 200px;
 }
