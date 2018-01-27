@@ -19,7 +19,7 @@ body {
 .sentence {
   font-size: 29px;
   line-height: 44px;
-  /*padding: 5.5px 0;*/
+  padding: 5.5px 0;
 }
 
 .card {
@@ -34,55 +34,38 @@ body {
   z-index: -1;
 }
 
-#backdrop0 {
-  top: 6px;
-  height: 121px;
-}
-
-.indent {
-  display: inline-block;
-}
-
-#indent1 {
-  width: 139px; /* 139 - 7 */
-}
-
-#indent2 {
-  width: 253px; /* 260 - 7 */
-}
-
-.switch {
+.highlight {
   background: hsla(250, 100%, 50%, 0.055);
   position: absolute;
   height: 33px;
 }
 
-#switch0 {
-  top: 0px;
+#highlight0 {
+  top: 5.5px;
   left: 90px;
   width: 86px;
 }
 
-#switch1 {
-  top: 0px;
+#highlight1 {
+  top: 5.5px;
   left: 399px;
   width: 65px;
 }
 
-#switch2 {
-  top: 44px;
+#highlight2 {
+  top: 49.5px;
   left: 205px;
   width: 223px;
 }
 
-#switch3 {
-  top: 88px;
+#highlight3 {
+  top: 93.5px;
   left: 0px;
   width: 126px;
 }
 
-#switch4 {
-  top: 88px;
+#highlight4 {
+  top: 93.5px;
   left: 65px;
   width: 61px;
 }
@@ -99,9 +82,9 @@ body {
   display: none;
 }
 
-.paint {
+/*.paint {
   background: hsla(250, 100%, 50%, 0.055);
-}
+}*/
 
 .right {
   float: right;
@@ -118,4 +101,12 @@ body {
 
 .bold {
   font-weight: 600;
+}
+
+.sentence {
+  pointer-events: none;
+}
+
+.clicked {
+  background: hsla(43, 100%, 50%, 0.1);
 }
