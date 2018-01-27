@@ -211,12 +211,24 @@ console.log('getIndents(): ' + (t1 - t0).toFixed(3) + 'ms');
 
 // Event handlers
 
-function handleClick(e) {
+function handleClick(e) { // Temp
+  
+  var xPos = e.clientX;
+  var yPos = e.clientY;
+  
+  var highlightGroup = e.target.firstElementChild // Temp
+  var elFromPoint;
+  
+  highlightGroup.style.zIndex = '1';
+  elFromPoint = document.elementFromPoint(xPos, yPos);
+  highlightGroup.style.zIndex = '-1';
+  
+  console.log(elFromPoint);
 }
 
 // Event listeners
 
-columnEl.addEventListener('click', handleClick, false);
+columnEl.addEventListener('click', handleClick, true);
 
 /*t0 = performance.now();
 t1 = performance.now();

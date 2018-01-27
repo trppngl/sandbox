@@ -5,6 +5,7 @@ body {
   -webkit-font-feature-settings: 'kern', 'liga', 'clig', 'onum' 1;
   font-feature-settings: 'kern', 'liga', 'clig', 'onum' 1; /* ? */
   margin: 0; /* ? */
+  cursor: default;
 }
 
 #column {
@@ -35,10 +36,6 @@ body {
 
 ::selection {
   background: rgba(50, 50, 50, 0.08);
-}
-
-.hide {
-  display: none;
 }
 
 /*.paint {
@@ -72,14 +69,30 @@ body {
   top: 0;
 }
 
+.highlight-group {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
 #highlight0 {
   top: 44px;
-  left: -100px;
-  width: 100px;
+  left: -51px;
+  width: 196px;
 }
 
 #highlight1 {
+  top: 44px;
+  left: -51px;
+  width: 83px;
+}
+
+#highlight2 {
   top: 88px;
-  left: -148px;
-  width: 200px;
+  left: -32px;
+  width: 104px;
+}
+
+.hide {
+  display: none;
 }
