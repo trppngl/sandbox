@@ -19,44 +19,34 @@ body {
 
 .sentence {
   position: relative;
+}
+
+.sentence {
   font-size: 29px;
   line-height: 44px;
   padding: 5.5px 0;
 }
 
-.card {
+.card .sentence {
   font-size: 22px;
   line-height: 33px;
+  padding: 4px 0;
+}
+
+.card {
   margin: 27.5px 22px; /* 5.5 = 11/2, 27.5 halfway b/w 22 and 33 */
 }
 
+.tempgraf {
+  margin: 22px 0;
+}
+
 ::-moz-selection {
-  background: rgba(50, 50, 50, 0.08);
+  background: rgba(100, 70, 70, 0.08);
 }
 
 ::selection {
   background: rgba(50, 50, 50, 0.08);
-}
-
-/*.paint {
-  background: hsla(250, 100%, 50%, 0.055);
-}*/
-
-.right {
-  float: right;
-}
-
-.headword-bar {
-  padding: 0 0 11px 0;
-}
-
-.headword {
-  font-size: 25px;
-  line-height: 33px;
-}
-
-.bold {
-  font-weight: 600;
 }
 
 .highlight {
@@ -88,9 +78,145 @@ body {
 }
 
 #highlight2 {
+  top: 0px;
+  left: 235px;
+  width: 95px;
+}
+
+#highlight3 {
+  top: 44px;
+  left: 212px;
+  width: 84px;
+}
+
+.slidebox {
+  display: inline-block;
+  position: absolute;
+  z-index: -1;
+  background: hsla(43, 100%, 50%, 0.1);
+}
+
+.slidebox {
+  height: 44px;
+}
+
+.card .slidebox {
+  height: 33px;
+}
+
+#slidebox0 {
+  top: 0px;
+  left: 0px;
+}
+
+#slidebox1 {
+  top: 44px;
+  left: 0px;
+}
+
+#slidebox2 {
   top: 88px;
-  left: -32px;
-  width: 104px;
+  left: 0px;
+}
+
+#slidebox3 {
+  top: 0px;
+  left: 0px;
+}
+
+#slidebox4 {
+  top: 44px;
+  left: -148px;
+}
+
+#slidebox5 {
+  top: 88px;
+  left: -148px;
+}
+
+#slidebox6 {
+  top: 132px;
+  left: -148px;
+}
+
+#slidebox7 {
+  top: 0px;
+  left: 0px;
+}
+
+#slidebox8 {
+  top: 33px;
+  left: 0px;
+}
+
+#slidebox9 {
+  top: 66px;
+  left: 0px;
+}
+
+#slidebox10 {
+  top: 0px;
+  left: 0px;
+}
+
+#slidebox11 {
+  top: 33px;
+  left: 0px;
+}
+
+#slidebox12 {
+  top: 66px;
+  left: 0px;
+}
+
+#slidebox13 {
+  top: 0px;
+  left: 0px;
+}
+
+#slidebox14 {
+  top: 33px;
+  left: 0px;
+}
+
+#slidebox15 {
+  top: 66px;
+  left: 0px;
+}
+
+#slidebox16 {
+  top: 99px;
+  left: 0px;
+}
+
+#slidebox17 {
+  top: 0px;
+  left: 0px;
+}
+
+#slidebox18 {
+  top: 33px;
+  left: 0px;
+}
+
+#slidebox19 {
+  top: 0px;
+  left: 0px;
+}
+
+#slidebox20 {
+  top: 0px;
+  left: 0px;
+}
+
+#slidebox21 {
+  top: 33px;
+  left: -343px;
+}
+
+#slidebox22 {
+  top: 66px;
+  left: -343px;
 }
 
 .hide {

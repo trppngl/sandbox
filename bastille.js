@@ -3,19 +3,22 @@
 var t0; // Temp
 var t1; // Temp
 
+var audio = document.getElementById('audio');
+var playAll = false;
+
 var columnEl = document.getElementById('column');
 
-var currentCardIndex;
+var currentCardIndex = null;
+var currentSegIndex = -1;
 
 t0 = performance.now();
 
 var sentenceEls = [];
-/*var firstSegEls = [];*/
 var cardEls = [];
-var prevSentenceIndexes = [];
+var cardSentenceIndexes = [];
 var numSentences = 0;
 
-(function () {
+(function () { // Temp
   
   var paragraphs = document.getElementsByClassName('paragraph');
   var el;
@@ -29,48 +32,18 @@ var numSentences = 0;
       if (el.tagName === 'SPAN') {
         
         sentenceEls.push(el);
-        /*firstSegEls.push(el.firstElementChild); // IE9+*/
         numSentences++;
         
       } else {
         
         cardEls.push(el);
-        prevSentenceIndexes.push(numSentences - 1);
+        cardSentenceIndexes.push(numSentences - 1);
       }
       
       el = el.nextElementSibling; // IE9+
     }
   }
 })();
-
-/*(function () {
-  
-  var paragraphs = document.getElementsByClassName('paragraph');
-  var theseChildren;
-  var el;
-  
-  for (var i = 0; i < paragraphs.length; i++) {
-    
-    theseChildren = paragraphs[i].children; // IE9+
-    
-    for (var j = 0; j < theseChildren.length; j++) {
-      
-      el = theseChildren[j];
-      
-      if (el.tagName === 'SPAN') {
-        
-        sentenceEls.push(el);
-        firstSegEls.push(el.firstElementChild); // IE9+
-        numSentences++;
-        
-      } else {
-        
-        cardEls.push(el);
-        prevSentenceIndexes.push(numSentences - 1);
-      }
-    }
-  }
-})();*/
 
 t1 = performance.now();
 console.log('Populate arrays: ' + (t1 - t0).toFixed(3) + 'ms');
@@ -111,27 +84,27 @@ function unindent(sentenceIndex) {
 
 function toggleCard(targetCardIndex) {
   
-  if (currentCardIndex !== undefined) {
+  if (currentCardIndex !== null) {
     
     hide(cardEls[currentCardIndex]);
-    unindent(prevSentenceIndexes[currentCardIndex] + 1);
+    unindent(cardSentenceIndexes[currentCardIndex] + 1);
   }
   
-  if (targetCardIndex !== undefined && targetCardIndex !== currentCardIndex) {
+  if (targetCardIndex !== null && targetCardIndex !== currentCardIndex) {
     
     show(cardEls[targetCardIndex]);
-    indent(prevSentenceIndexes[targetCardIndex] + 1);
+    indent(cardSentenceIndexes[targetCardIndex] + 1);
     currentCardIndex = targetCardIndex;
     
   } else {
     
-    currentCardIndex = undefined;
+    currentCardIndex = null;
   }
 }
 
 //
 
-function getOffsets() { // Separate functions for top and left?
+function getOffsets() { // Might not need both top and left anymore
   
   var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
   var scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
@@ -149,25 +122,6 @@ function getOffsets() { // Separate functions for top and left?
 
 //
 
-/*function getIndentsResizeBackdrops() { // Combined two functions
-  
-  var offsets = getOffsets();
-  var rects = [];
-  
-  for (var i = 0; i < numSentences; i++) {
-    
-    indents[i] = sentenceEls[i].getClientRects()[0].left - offsets.left;
-    
-    rects[i] = sentenceEls[i].getBoundingClientRect();
-  }
-  
-  for (i = 0; i < numSentences; i++) {
-    
-    backdropEls[i].style.top = rects[i].top - offsets.top + 'px';
-    backdropEls[i].style.height = rects[i].height + 'px';
-  }
-}*/
-
 function getIndents() { // Close and reopen current card (if any)?
   
   var offsets = getOffsets();
@@ -176,29 +130,6 @@ function getIndents() { // Close and reopen current card (if any)?
     indents[i] = sentenceEls[i].getClientRects()[0].left - offsets.left;
   }
 }
-
-/*function resizeBackdrops() {
-  
-  var offsets = getOffsets();
-  
-  var rects = [];
-  
-  var top;
-  var height;
-  
-  for (var i = 0; i < numSentences; i++) {
-    rects[i] = sentenceEls[i].getBoundingClientRect();
-  }
-  
-  for (i = 0; i < numSentences; i++) {
-    
-    top = rects[i].top - offsets.top;
-    height = rects[i].height;
-    
-    backdropEls[i].style.top = top + 'px';
-    backdropEls[i].style.height = height + 'px';
-  }
-}*/
 
 // On page load or resize
 
@@ -211,25 +142,88 @@ console.log('getIndents(): ' + (t1 - t0).toFixed(3) + 'ms');
 
 // Event handlers
 
-function handleClick(e) { // Temp
+function handleClick(e) { // Very temp
   
-  var xPos = e.clientX;
-  var yPos = e.clientY;
-  
-  var highlightGroup = e.target.firstElementChild // Temp
+  var elToElevate = e.target.closest('.sentence').querySelector('.highlight-group'); // Temp
   var elFromPoint;
   
-  highlightGroup.style.zIndex = '1';
-  elFromPoint = document.elementFromPoint(xPos, yPos);
-  highlightGroup.style.zIndex = '-1';
+  if (elToElevate) {
+    elToElevate.style.zIndex = '1';
+    elFromPoint = document.elementFromPoint(e.clientX, e.clientY);
+    elToElevate.style.zIndex = '-1';
+  }
   
-  console.log(elFromPoint);
+  if (elFromPoint.dataset.card) {
+    toggleCard(Number(elFromPoint.dataset.card));
+  }
+}
+
+function handleKeydown(e) {
+  switch(e.keyCode) {
+    case 32:
+      e.preventDefault();
+      togglePlayAll();
+      break;
+  }
 }
 
 // Event listeners
 
-columnEl.addEventListener('click', handleClick, true);
+document.addEventListener('click', handleClick); // columnEl?
+document.addEventListener('keydown', handleKeydown);
+
+//
 
 /*t0 = performance.now();
 t1 = performance.now();
 console.log((t1 - t0).toFixed(3) + 'ms');*/
+
+//
+
+var times = [
+  [356.908, 358.217],
+  [358.244, 360.619],
+  [360.842, 364.097],
+  [364.097, 365.352],
+  [366.617, 369.518],
+  [369.518, 370.272],
+  [370.272, 372.331],
+  [372.468, 373.928],
+  [374.053, 374.937],
+  [374.937, 376.306],
+  [376.692, 380.103],
+  [381.499, 386.316],
+  [387.897, 392.791],
+  [392.952, 394.813],
+  [394.984, 397.363],
+]
+
+//
+
+function togglePlayAll() {
+  if (audio.paused) {
+    playAll = true;
+    next();
+  } else {
+    playAll = !playAll;
+  }
+}
+
+function next() { // Temp
+  playSeg(currentSegIndex + 1)
+}
+
+/*function next() {
+  var nextVisibleIndex = getNextVisibleIndex();
+  if (nextVisibleIndex !== undefined) {
+    playSeg(nextVisibleIndex);
+  }
+}*/
+
+function playSeg(index) { // Temp
+  currentSegIndex = index;
+  audio.currentTime = times[currentSegIndex][0];
+  if (audio.paused) {
+    audio.play();
+  }
+}
