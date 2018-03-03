@@ -13,10 +13,10 @@ var currentSegIndex = -1;
 
 t0 = performance.now();
 
-var sentenceEls = [];
+var textSentenceEls = [];
 var cardEls = [];
 var cardSentenceIndexes = [];
-var numSentences = 0;
+var numTextSentences = 0;
 
 (function () { // Temp
   
@@ -31,13 +31,13 @@ var numSentences = 0;
       
       if (el.tagName === 'SPAN') {
         
-        sentenceEls.push(el);
-        numSentences++;
+        textSentenceEls.push(el);
+        numTextSentences++;
         
       } else {
         
         cardEls.push(el);
-        cardSentenceIndexes.push(numSentences - 1);
+        cardSentenceIndexes.push(numTextSentences - 1);
       }
       
       el = el.nextElementSibling; // IE9+
@@ -48,7 +48,13 @@ var numSentences = 0;
 t1 = performance.now();
 console.log('Populate arrays: ' + (t1 - t0).toFixed(3) + 'ms');
 
-var indents = new Array(numSentences);
+var indents = new Array(numTextSentences);
+
+var slideboxEls = document.getElementsByClassName('slidebox') // Temp
+
+var allSentenceEls = document.getElementsByClassName('sentence') // Temp
+
+var numSentences = allSentenceEls.length; // Temp
 
 //
 
@@ -68,15 +74,15 @@ function hide(el) {
 
 function indent(sentenceIndex) {
   
-  if (sentenceIndex < numSentences) {
-    sentenceEls[sentenceIndex].style.marginLeft = indents[sentenceIndex] + 'px';
+  if (sentenceIndex < numTextSentences) {
+    textSentenceEls[sentenceIndex].style.marginLeft = indents[sentenceIndex] + 'px';
   }
 }
 
 function unindent(sentenceIndex) {
   
-  if (sentenceIndex < numSentences) {
-    sentenceEls[sentenceIndex].style.marginLeft = '';
+  if (sentenceIndex < numTextSentences) {
+    textSentenceEls[sentenceIndex].style.marginLeft = '';
   }
 }
 
@@ -126,8 +132,8 @@ function getIndents() { // Close and reopen current card (if any)?
   
   var offsets = getOffsets();
   
-  for (var i = 0; i < numSentences; i++) {
-    indents[i] = sentenceEls[i].getClientRects()[0].left - offsets.left;
+  for (var i = 0; i < numTextSentences; i++) {
+    indents[i] = textSentenceEls[i].getClientRects()[0].left - offsets.left;
   }
 }
 
@@ -180,7 +186,7 @@ console.log((t1 - t0).toFixed(3) + 'ms');*/
 
 //
 
-var times = [
+var times = [ // Prob incomplete
   [356.908, 358.217],
   [358.244, 360.619],
   [360.842, 364.097],
@@ -197,6 +203,203 @@ var times = [
   [392.952, 394.813],
   [394.984, 397.363],
 ]
+
+var slideRects = [
+  {top: 0, left: 0, width: 470},
+  {top: 44, left: 0, width: 463},
+  {top: 88, left: 0, width: 148},
+  {top: 0, left: 0, width: 330},
+  {top: 44, left: -148, width: 476},
+  {top: 88, left: -148, width: 430},
+  {top: 132, left: -148, width: 269},
+  {top: 0, left: 0, width: 417},
+  {top: 33, left: 0, width: 416},
+  {top: 66, left: 0, width: 160},
+  {top: 0, left: 0, width: 425},
+  {top: 33, left: 0, width: 424},
+  {top: 66, left: 0, width: 384},
+  {top: 0, left: 0, width: 406},
+  {top: 33, left: 0, width: 399},
+  {top: 66, left: 0, width: 438},
+  {top: 99, left: 0, width: 314},
+  {top: 0, left: 0, width: 100},
+  {top: 44, left: -269, width: 460},
+  {top: 88, left: -269, width: 129},
+  {top: 0, left: 0, width: 336},
+  {top: 44, left: -129, width: 431},
+  {top: 88, left: -129, width: 452},
+  {top: 132, left: -129, width: 81},
+  {top: 0, left: 0, width: 424},
+  {top: 33, left: 0, width: 136},
+  {top: 0, left: 0, width: 207},
+  {top: 0, left: 0, width: 50},
+  {top: 33, left: -365, width: 436},
+  {top: 66, left: -365, width: 324},
+]
+
+/*function makeHighlightBoxes(lineRange) {
+  
+  var box;
+  var top;
+  var left;
+  var width;
+  var thisLineRect;
+  
+  for (var i = lineRange.end.line; i >= lineRange.start.line; i--) {
+    
+    thisLineRect = visLineRects[i];
+    
+    // top = thisLineRect.top;
+    top = thisLineRect.top;
+    left = thisLineRect.left;
+    width = thisLineRect.width;
+    
+    if (i === lineRange.end.line) {
+      width = lineRange.end.offset;
+    }
+    
+    if (i === lineRange.start.line) {
+      left += lineRange.start.offset;
+      width -= lineRange.start.offset;
+    }
+    
+    box = document.createElement('div');
+    box.style.top = top + 'px';
+    box.style.left = left + 'px';
+    box.style.width = width + 'px';
+    box.classList.add('highlight-box'); // Change?
+    fragment.appendChild(box); // Boxes appended in reverse; could push them to array and unreverse before appending
+  }
+  
+  highlightPane.innerHTML = '';
+  highlightPane.appendChild(fragment);
+}*/
+
+function resizeSlidebox(index, left, width) {
+  
+  slideboxEls[index].style = 'left: ' + left + 'px; width: ' + width + 'px;';
+}
+
+function resetSlidebox(index) {
+  
+  var left = slideRects[index].left;
+  
+  resizeSlidebox(index, left, 0);
+}
+
+function resizeSlideboxes(startBoxIndex, startOffset, endBoxIndex, endOffset) {
+  
+  var left;
+  var width;
+  
+  for (var i = startBoxIndex; i <= endBoxIndex; i++) { // Was reversed (bottom-up) in bastille but can't remember why
+    
+    left = slideRects[i].left;
+    width = slideRects[i].width;
+    
+    if (i === endBoxIndex) {
+      width = endOffset;
+    }
+    
+    if (i === startBoxIndex) {
+      left += startOffset;
+      width -= startOffset;
+    }
+    
+    slideboxEls[i].style = 'left: ' + left + 'px; width: ' + width + 'px;';
+  } 
+}
+
+//
+
+var segsBySentence = [
+  [0, 1, 2, 3],
+  [4, 5, 6, 7, 8, 9, 10],
+  [11, 12, 13, 14],
+  [15, 16, 17],
+  [18, 19, 20, 21, 22, 23],
+  [24],
+  [25],
+  [26],
+  [27],
+  [28, 29, 30, 31],
+];
+
+function getFirstSegInSentence(sentenceIndex) {
+  return segsBySentence[sentenceIndex][0];
+}
+
+function getLastSegInSentence(sentenceIndex) {
+  var numSegsInSentence = segsBySentence[sentenceIndex].length - 1;
+  return segsBySentence[sentenceIndex][numSegsInSentence];
+}
+
+var sentencesBySeg = [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 6, 7, 8, 9, 9, 9, 9];
+
+function getPrevSiblingSeg(segIndex) {
+  if (sentencesBySeg[segIndex - 1] === sentencesBySeg[segIndex]) {
+    return segIndex - 1;
+  }
+}
+
+function getNextSiblingSeg(segIndex) {
+  if (sentencesBySeg[segIndex + 1] === sentencesBySeg[segIndex]) {
+    return segIndex + 1;
+  }
+}
+
+var cardsBySentence = [null, null, 0, 0, 1, null, null, 2, 2, 2];
+
+function isVisSentence(sentenceIndex) {
+  var parentCardIndex = cardsBySentence[sentenceIndex];
+  return (parentCardIndex === null || parentCardIndex === currentCardIndex);
+}
+
+function isSentenceIndex(sentenceIndex) {
+  return Boolean(allSentenceEls[sentenceIndex]); // Temp
+}
+
+function getPrevVisSentence(sentenceIndex) {
+  if (isSentenceIndex(sentenceIndex)) {
+    for (var i = sentenceIndex - 1; i >= 0; i--) {
+      if (isVisSentence(i)) {
+        return i;
+      }
+    }
+  }
+}
+
+function getNextVisSentence(sentenceIndex) {
+  if (isSentenceIndex(sentenceIndex)) {
+    for (var i = sentenceIndex + 1; i < numSentences; i++) {
+      if (isVisSentence(i)) {
+        return i;
+      }
+    }
+  }
+}
+
+/*function getPrevVisSentence(sentenceIndex) {
+  if (!isSentenceIndex(sentenceIndex)) {
+    return;
+  }
+  for (var i = sentenceIndex - 1; i >= 0; i--) {
+    if (isVisSentence(i)) {
+      return i;
+    }
+  }
+}
+
+function getNextVisSentence(sentenceIndex) {
+  if (!isSentenceIndex(sentenceIndex)) {
+    return;
+  }
+  for (var i = sentenceIndex + 1; i < numSentences; i++) {
+    if (isVisSentence(i)) {
+      return i;
+    }
+  }
+}*/
 
 //
 

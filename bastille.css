@@ -1,5 +1,6 @@
 body {
   background: #fff;
+  background: #f4f4f6;
   color: rgba(0, 0, 0, 0.94);
   font-family: 'Linux Libertine', serif;
   -webkit-font-feature-settings: 'kern', 'liga', 'clig', 'onum' 1;
@@ -54,12 +55,12 @@ body {
   position: absolute;
   background: hsla(250, 100%, 50%, 0.055);
   height: 33px;
-  z-index: -1;
   margin: 5.5px 0;
   top: 0;
+  z-index: -1;
 }
 
-.highlight-group {
+.highlight-group { /* Rethink? */
   position: absolute;
   top: 0;
   left: 0;
@@ -92,8 +93,10 @@ body {
 .slidebox {
   display: inline-block;
   position: absolute;
-  z-index: -1;
   background: hsla(43, 100%, 50%, 0.1);
+  background: #fff;
+  z-index: -1;
+  z-index: -2;
 }
 
 .slidebox {
@@ -195,13 +198,13 @@ body {
 }
 
 #slidebox18 {
-  top: 33px;
-  left: 0px;
+  top: 44px;
+  left: -269px;
 }
 
 #slidebox19 {
-  top: 0px;
-  left: 0px;
+  top: 88px;
+  left: -269px;
 }
 
 #slidebox20 {
@@ -210,11 +213,46 @@ body {
 }
 
 #slidebox21 {
+  top: 44px;
+  left: -129px;
+}
+
+#slidebox22 {
+  top: 88px;
+  left: -129px;
+}
+
+#slidebox23 {
+  top: 132px;
+  left: -129px;
+}
+
+#slidebox24 {
+  top: 0px;
+  left: 0px;
+}
+
+#slidebox25 {
+  top: 33px;
+  left: 0px;
+}
+
+#slidebox26 {
+  top: 0px;
+  left: 0px;
+}
+
+#slidebox27 {
+  top: 0px;
+  left: 0px;
+}
+
+#slidebox28 {
   top: 33px;
   left: -343px;
 }
 
-#slidebox22 {
+#slidebox29 {
   top: 66px;
   left: -343px;
 }
