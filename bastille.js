@@ -21,20 +21,24 @@ var numSentences = sentenceEls.length;
 
 var cardEls = document.getElementsByClassName('card');
 
-// Toggle cards
+var segEls = document.getElementsByClassName('seg');
 
-function indent(sentenceIndex) {
+var indentSeg = null;
+
+// Notes
+
+// Put indent() and unindent() inside toggleCard()?
+
+function indent() { // Works, but needs work
   
-  if (isValidSentenceIndex(sentenceIndex)) {
-    sentenceEls[sentenceIndex].style.marginLeft = indentsBySentence[sentenceIndex] + 'px';
-  }
+  indentSeg = segEls[getFirstSegInSentence(nextSentencesByCard[currentCardIndex])];
+    
+  indentSeg.style.marginLeft = indentsBySentence[nextSentencesByCard[currentCardIndex]] + 'px';
 }
 
-function unindent(sentenceIndex) {
-  
-  if (isValidSentenceIndex(sentenceIndex)) {
-    sentenceEls[sentenceIndex].style.marginLeft = '';
-  }
+function unindent() {
+  indentSeg.style.marginLeft = '';
+  indentSeg = null; // Unnecessary?
 }
 
 function toggleCard(targetCardIndex) {
@@ -42,51 +46,20 @@ function toggleCard(targetCardIndex) {
   if (currentCardIndex !== null) {
     
     hide(cardEls[currentCardIndex]);
-    unindent(nextSentencesByCard[currentCardIndex]);
+    unindent();
   }
   
   if (targetCardIndex !== null && targetCardIndex !== currentCardIndex) {
     
-    show(cardEls[targetCardIndex]);
-    indent(nextSentencesByCard[targetCardIndex]);
     currentCardIndex = targetCardIndex;
+    show(cardEls[currentCardIndex]);
+    indent();
     
   } else {
     
     currentCardIndex = null;
   }
 }
-
-// Rethink getIndents() and getOffsets() (no array of just textSegs)
-
-/*function getOffsets() { // Might not need both top and left anymore
-  
-  var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-  var scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
-  
-  var columnRect = columnEl.getBoundingClientRect();
-  
-  var top = columnRect.top - scrollTop;
-  var left = columnRect.left - scrollLeft;
-  
-  return {
-    top: top,
-    left: left
-  }
-}
-
-function getIndents() { // Close and reopen current card (if any)?
-  
-  var offsets = getOffsets();
-  
-  for (var i = 0; i < numTextSentences; i++) {
-    indentsBySentence[i] = textSentenceEls[i].getClientRects()[0].left - offsets.left;
-  }
-}*/
-
-// On page load or resize
-
-/*getIndents();*/
 
 // Helper functions
 
@@ -259,7 +232,7 @@ function resizeSlideboxes(startBoxIndex, startOffset, endBoxIndex, endOffset) {
 
 // Event handlers
 
-function handleClick(e) { // Very temp
+function handleClick(e) { // Very temp!
   
   var elToElevate = e.target.closest('.sentence').querySelector('.highlight-group'); // Temp
   var elFromPoint;
@@ -361,7 +334,40 @@ var parentCardsBySentence = [null, null, 0, 0, 1, null, null, 2, 2, 2];
 
 var nextSentencesByCard = [5, 5, null];
 
-var indentsBySentence = [0, 148, null, null, null, 269, 129, null, null, null];
+var indentsBySentence = [0, 148, null, null, null, 269, 129, null, null, null]; // Possible there will be text sentences that don't follow cards in any mode (like 1 and 6 here). Don't bother getting their indents? Could speed things up just a bit?
+
+//
+
+// Rethink getIndents() and getOffsets() (no array of just textSegs)
+
+/*function getOffsets() { // Might not need both top and left anymore
+  
+  var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+  var scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
+  
+  var columnRect = columnEl.getBoundingClientRect();
+  
+  var top = columnRect.top - scrollTop;
+  var left = columnRect.left - scrollLeft;
+  
+  return {
+    top: top,
+    left: left
+  }
+}
+
+function getIndents() { // Close and reopen current card (if any)?
+  
+  var offsets = getOffsets();
+  
+  for (var i = 0; i < numTextSentences; i++) {
+    indentsBySentence[i] = textSentenceEls[i].getClientRects()[0].left - offsets.left;
+  }
+}*/
+
+// On page load or resize
+
+/*getIndents();*/
 
 //
 
