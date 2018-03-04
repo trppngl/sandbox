@@ -29,16 +29,39 @@ var indentSeg = null;
 
 // Put indent() and unindent() inside toggleCard()?
 
-function indent() { // Works, but needs work
+function indent() { // Works, but could be better?
   
-  indentSeg = segEls[getFirstSegInSentence(nextSentencesByCard[currentCardIndex])];
+  var nextSentence;
+  var indent;
+  
+  nextSentence = nextSentencesByCard[currentCardIndex];
+  
+  if (nextSentence) {
     
-  indentSeg.style.marginLeft = indentsBySentence[nextSentencesByCard[currentCardIndex]] + 'px';
+    indentSeg = segEls[getFirstSegInSentence(nextSentence)];
+    indent = indentsBySentence[nextSentence];
+  
+    indentSeg.style.marginLeft = indent + 'px';
+  }
 }
 
 function unindent() {
-  indentSeg.style.marginLeft = '';
-  indentSeg = null; // Unnecessary?
+  
+  if (indentSeg) {
+    
+    indentSeg.style.marginLeft = '';
+    indentSeg = null; // Unnecessary?
+  }
+}
+
+function showCard(targetCardIndex) {
+  
+  show(cardEls[targetCardIndex]);
+}
+
+function hideCard(targetCardIndex) {
+  
+  hide(cardEls[targetCardIndex]);
 }
 
 function toggleCard(targetCardIndex) {
@@ -76,12 +99,20 @@ function hide(el) {
 }
 
 function getFirstSegInSentence(sentenceIndex) {
-  return childSegsBySentence[sentenceIndex][0];
+  if (isValidSentenceIndex(sentenceIndex)) {
+    return childSegsBySentence[sentenceIndex][0];
+  }
 }
 
 function getLastSegInSentence(sentenceIndex) {
-  var numSegsInSentence = childSegsBySentence[sentenceIndex].length - 1;
-  return childSegsBySentence[sentenceIndex][numSegsInSentence];
+  
+  var lastSegIndex
+  
+  if (isValidSentenceIndex(sentenceIndex)) {
+    
+    lastSegIndex = childSegsBySentence[sentenceIndex].length - 1;
+    return childSegsBySentence[sentenceIndex][lastSegIndex];
+  }
 }
 
 function getPrevSiblingSeg(segIndex) {
