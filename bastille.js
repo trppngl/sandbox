@@ -225,53 +225,51 @@ function toggleSegMode() {
 
 //
 
-function prev() { // Unfinished
+function getPrevTargetSegIndex() { // Rename?
   
-  if (segMode && audio.currentTime > times[currentSegIndex][0] + 0.25) { // Might not need this part (could be the 'else') if function just determines currentSegIndex and then that seg is played at the end
+  if (segMode) {
     
-    playSeg(currentSegIndex);
-    return;
+    if (audio.currentTime > times[currentSegIndex][0] + 0.25) {
+      
+      return currentSegIndex;
+      
+    } else {
+      
+      return getPrevVisSeg(currentSegIndex);
+    }
+  } else {
     
-  } else if (!segMode && audio.currentTime > times[getFirstSegInSentence(parentSentencesBySeg[currentSegIndex])][0] + 0.25) {
+    if (audio.currentTime >  times[getFirstSegInSentence(parentSentencesBySeg[currentSegIndex])][0] + 0.25) { // Shorter way?
+      
+      return getFirstSegInSentence(parentSentencesBySeg[currentSegIndex]); // Shorter way?
+      
+    } else {
+      
+      return getFirstSegInSentence(getPrevVisSentence(parentSentencesBySeg[currentSegIndex])); // Shorter way?
+    }
+  }
+}
+
+function prev() { // Temp
+  
+  var targetSegIndex = getPrevTargetSegIndex();
+  
+  if (targetSegIndex !== undefined) {
     
     if (segEls[currentSegIndex]) { // Temp
       segEls[currentSegIndex].style.background = '';
     }
-    
-    currentSegIndex = getFirstSegInSentence(parentSentencesBySeg[currentSegIndex]);
-    
+
+    currentSegIndex = targetSegIndex;
+
     console.log(currentSegIndex);
+
     segEls[currentSegIndex].style.background = '#fff';
     playSeg(currentSegIndex);
-    return;
   }
-  
-  if (segEls[currentSegIndex]) { // Temp
-    segEls[currentSegIndex].style.background = '';
-  }
-  
-  if (segMode && getPrevSiblingSeg(currentSegIndex) != null) { // != null OK?
-    
-    console.log('a');
-    currentSegIndex = getPrevSiblingSeg(currentSegIndex);
-    
-  } else if (segMode && getPrevVisSentence(parentSentencesBySeg[currentSegIndex]) !== null) { // != null?
-    
-    console.log('b');
-    currentSegIndex = getLastSegInSentence(getPrevVisSentence(parentSentencesBySeg[currentSegIndex])); // Too long
-    
-  } else if (getPrevVisSentence(parentSentencesBySeg[currentSegIndex]) !== null) { // != null?
-    
-    console.log('c');
-    currentSegIndex = getFirstSegInSentence(getPrevVisSentence(parentSentencesBySeg[currentSegIndex])); // Too long
-  }
-  
-  console.log(currentSegIndex);
-  segEls[currentSegIndex].style.background = '#fff';
-  playSeg(currentSegIndex);
 }
 
-function next() { // Unfinished
+function next() { // Messy, new next seg functions should help
   
   if (segEls[currentSegIndex]) { // Temp
     
