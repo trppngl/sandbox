@@ -165,7 +165,7 @@ function isValidSentenceIndex(sentenceIndex) { // Merge?
 }
 
 function isValidSegIndex(segIndex) { // Merge?
-  return Boolean(segEls[segIndex]); // Use diff array?
+  return (Boolean(segEls[segIndex]) || segIndex === -1); // Temp, needs to allow -1?
 }
 
 function getPrevVisSentence(sentenceIndex) { // Merge?
@@ -227,9 +227,11 @@ function toggleSegMode() {
 
 function getPrevTargetSegIndex() { // Rename?
   
-  if (segMode) {
+  var parentSentence;
+  
+  if (segMode) { // This part basically good
     
-    if (audio.currentTime > times[currentSegIndex][0] + 0.25) {
+    if (audio.currentTime > times[currentSegIndex][0] + 0.25 || currentSegIndex === 0) { // Second condition prevents skipping but will probably also slow highlight
       
       return currentSegIndex;
       
@@ -237,20 +239,22 @@ function getPrevTargetSegIndex() { // Rename?
       
       return getPrevVisSeg(currentSegIndex);
     }
-  } else {
+  } else { // This part could use further streamlining/reduction
     
-    if (audio.currentTime >  times[getFirstSegInSentence(parentSentencesBySeg[currentSegIndex])][0] + 0.25) { // Shorter way?
+    parentSentence = parentSentencesBySeg[currentSegIndex];
+    
+    if (audio.currentTime >  times[getFirstSegInSentence(parentSentence)][0] + 0.25) {
       
-      return getFirstSegInSentence(parentSentencesBySeg[currentSegIndex]); // Shorter way?
+      return getFirstSegInSentence(parentSentence);
       
     } else {
       
-      return getFirstSegInSentence(getPrevVisSentence(parentSentencesBySeg[currentSegIndex])); // Shorter way?
+      return getFirstSegInSentence(getPrevVisSentence(parentSentence));
     }
   }
 }
 
-function prev() { // Temp
+function prev() { // Temp, almost identical to next(), merge?
   
   var targetSegIndex = getPrevTargetSegIndex();
   
@@ -262,36 +266,42 @@ function prev() { // Temp
 
     currentSegIndex = targetSegIndex;
 
-    console.log(currentSegIndex);
+    console.log(currentSegIndex); // Temp
 
     segEls[currentSegIndex].style.background = '#fff';
     playSeg(currentSegIndex);
   }
 }
 
-function next() { // Messy, new next seg functions should help
+function getNextTargetSegIndex() {
   
-  if (segEls[currentSegIndex]) { // Temp
-    
-    segEls[currentSegIndex].style.background = '';
+  var parentSentence;
+  
+  if (segMode) {
+    return getNextVisSeg(currentSegIndex);
+  } else {
+    parentSentence = parentSentencesBySeg[currentSegIndex];
+    return getFirstSegInSentence(getNextVisSentence(parentSentence));
   }
-  
-  if (currentSegIndex === -1) { // OK? How to handle index -1?
-    
-    currentSegIndex = 0;
-    
-  } else if (segMode && getNextSiblingSeg(currentSegIndex)) { // !== null?
+}
 
-    currentSegIndex = getNextSiblingSeg(currentSegIndex);
-    
-  } else if (getNextVisSentence(parentSentencesBySeg[currentSegIndex])) { // !== null?
-    
-    currentSegIndex = getFirstSegInSentence(getNextVisSentence(parentSentencesBySeg[currentSegIndex])); // Too long
-  }
+function next() { // Temp, almost identical to prev(), merge?
   
-  console.log(currentSegIndex);
-  segEls[currentSegIndex].style.background = '#fff';
-  playSeg(currentSegIndex);
+  var targetSegIndex = getNextTargetSegIndex();
+  
+  if (targetSegIndex !== undefined) {
+    
+    if (segEls[currentSegIndex]) { // Temp
+      segEls[currentSegIndex].style.background = '';
+    }
+
+    currentSegIndex = targetSegIndex;
+
+    console.log(currentSegIndex); // Temp
+
+    segEls[currentSegIndex].style.background = '#fff';
+    playSeg(currentSegIndex);
+  }
 }
 
 function playSeg(index) { // Temp
