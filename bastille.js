@@ -17,12 +17,12 @@ var currentSegIndex = -1;
 var slideboxEls = document.getElementsByClassName('slidebox');
 
 var sentenceEls = document.getElementsByClassName('sentence');
+var segEls = document.getElementsByClassName('seg');
 
 var numSentences = sentenceEls.length;
+var numSegs = segEls.length;
 
 var cardEls = document.getElementsByClassName('card');
-
-var segEls = document.getElementsByClassName('seg');
 
 var indentSegEl = null;
 
@@ -150,16 +150,25 @@ function getNextSiblingSeg(segIndex) {
   }
 }
 
-function isVisSentence(sentenceIndex) {
+function isVisSentence(sentenceIndex) { // Merge with isVisSeg()?
   var parentCardIndex = parentCardsBySentence[sentenceIndex];
   return (parentCardIndex === null || parentCardIndex === currentCardIndex);
 }
 
-function isValidSentenceIndex(sentenceIndex) {
-  return Boolean(sentenceEls[sentenceIndex]); // Temp
+function isVisSeg(segIndex) { // Merge with isVisSentence()?
+  var parentCardIndex = parentCardsBySentence[parentSentencesBySeg[segIndex]];
+  return (parentCardIndex === null || parentCardIndex === currentCardIndex);
 }
 
-function getPrevVisSentence(sentenceIndex) {
+function isValidSentenceIndex(sentenceIndex) { // Merge?
+  return Boolean(sentenceEls[sentenceIndex]); // Use diff array?
+}
+
+function isValidSegIndex(segIndex) { // Merge?
+  return Boolean(segEls[segIndex]); // Use diff array?
+}
+
+function getPrevVisSentence(sentenceIndex) { // Merge?
   if (isValidSentenceIndex(sentenceIndex)) {
     for (var i = sentenceIndex - 1; i >= 0; i--) {
       if (isVisSentence(i)) {
@@ -169,10 +178,30 @@ function getPrevVisSentence(sentenceIndex) {
   }
 }
 
-function getNextVisSentence(sentenceIndex) {
+function getPrevVisSeg(segIndex) { // Merge?
+  if (isValidSegIndex(segIndex)) {
+    for (var i = segIndex - 1; i >= 0; i--) {
+      if (isVisSeg(i)) {
+        return i;
+      }
+    }
+  }
+}
+
+function getNextVisSentence(sentenceIndex) { // Merge?
   if (isValidSentenceIndex(sentenceIndex)) {
     for (var i = sentenceIndex + 1; i < numSentences; i++) {
       if (isVisSentence(i)) {
+        return i;
+      }
+    }
+  }
+}
+
+function getNextVisSeg(segIndex) { // Merge?
+  if (isValidSegIndex(segIndex)) {
+    for (var i = segIndex + 1; i < numSegs; i++) {
+      if (isVisSeg(i)) {
         return i;
       }
     }
@@ -194,10 +223,30 @@ function toggleSegMode() {
   segMode = !segMode;
 }
 
+//
+
 function prev() { // Unfinished
   
-  if (segEls[currentSegIndex]) { // Temp
+  if (segMode && audio.currentTime > times[currentSegIndex][0] + 0.25) { // Might not need this part (could be the 'else') if function just determines currentSegIndex and then that seg is played at the end
     
+    playSeg(currentSegIndex);
+    return;
+    
+  } else if (!segMode && audio.currentTime > times[getFirstSegInSentence(parentSentencesBySeg[currentSegIndex])][0] + 0.25) {
+    
+    if (segEls[currentSegIndex]) { // Temp
+      segEls[currentSegIndex].style.background = '';
+    }
+    
+    currentSegIndex = getFirstSegInSentence(parentSentencesBySeg[currentSegIndex]);
+    
+    console.log(currentSegIndex);
+    segEls[currentSegIndex].style.background = '#fff';
+    playSeg(currentSegIndex);
+    return;
+  }
+  
+  if (segEls[currentSegIndex]) { // Temp
     segEls[currentSegIndex].style.background = '';
   }
   
@@ -219,6 +268,7 @@ function prev() { // Unfinished
   
   console.log(currentSegIndex);
   segEls[currentSegIndex].style.background = '#fff';
+  playSeg(currentSegIndex);
 }
 
 function next() { // Unfinished
@@ -243,6 +293,7 @@ function next() { // Unfinished
   
   console.log(currentSegIndex);
   segEls[currentSegIndex].style.background = '#fff';
+  playSeg(currentSegIndex);
 }
 
 function playSeg(index) { // Temp
@@ -373,7 +424,7 @@ document.addEventListener('keydown', handleKeydown);
 
 // Arrays temporarily populated manually
 
-var times = [ // Prob incomplete
+var times = [
   [356.908, 358.217],
   [358.244, 360.619],
   [360.842, 364.097],
@@ -385,10 +436,29 @@ var times = [ // Prob incomplete
   [374.053, 374.937],
   [374.937, 376.306],
   [376.692, 380.103],
-  [381.499, 386.316],
-  [387.897, 392.791],
+  [423.960, 426.252], // Les prix...
+  [426.252, 428.298],
+  [428.423, 429.948],
+  [430.072, 432.614], // ...a manger.
+  [433.848, 436.900], // Il y a dans...
+  [437.201, 441.422],
+  [441.422, 444.472], // ...de nourriture.
+  [446.365, 451.690], // Face à...
+  [452.050, 455.765],
+  [456.124, 458.092],
+  [458.092, 459.624],
+  [459.920, 460.490],
+  [460.490, 462.570], // ...la société française.
+  [381.499, 386.316], // Le roi...sur Terre.
+  [387.897, 392.791], // Un des rois...
   [392.952, 394.813],
-  [394.984, 397.363],
+  [394.984, 397.363], // ...le roi soleil.
+  [405.043, 411.709], // En 1789...mauvaise.
+  [412.197, 414.035], // La France...en crise.
+  [414.789, 416.895], // Elle a...
+  [417.071, 419.061],
+  [419.498, 420.240],
+  [420.240, 423.048], // ...ses dettes.
 ]
 
 var slideRects = [
@@ -431,13 +501,13 @@ var childSegsBySentence = [
   [15, 16, 17],
   [18, 19, 20, 21, 22, 23],
   [24],
-  [25],
-  [26],
-  [27],
-  [28, 29, 30, 31],
+  [25, 26, 27],
+  [28],
+  [29],
+  [30, 31, 32, 33],
 ];
 
-var parentSentencesBySeg = [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 6, 7, 8, 9, 9, 9, 9];
+var parentSentencesBySeg = [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 6, 6, 6, 7, 8, 9, 9, 9, 9];
 
 var parentCardsBySentence = [null, null, 0, 0, 1, null, null, 2, 2, 2];
 
