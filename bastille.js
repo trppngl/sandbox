@@ -4,14 +4,15 @@ var t0; // Temp
 var t1; // Temp
 
 var audio = document.getElementById('audio'); // audioEl?
-var playAll = false; // Rename?
+var playAllMode = false; // Rename?
+var segMode = true; // Rename?
 
 var columnEl = document.getElementById('column');
 
 var currentCardIndex = null;
 var currentSegIndex = -1;
 
-// Maybe temp
+// Temp, below should be arrays, not HTMLCollections
 
 var slideboxEls = document.getElementsByClassName('slidebox');
 
@@ -23,7 +24,7 @@ var cardEls = document.getElementsByClassName('card');
 
 var segEls = document.getElementsByClassName('seg');
 
-var indentSeg = null;
+var indentSegEl = null;
 
 // Notes
 
@@ -31,42 +32,40 @@ var indentSeg = null;
 
 function indent() { // Works, but could be better?
   
-  var nextSentence;
   var indent;
-  
-  nextSentence = nextSentencesByCard[currentCardIndex];
+  var nextSentence = nextSentencesByCard[currentCardIndex];
   
   if (nextSentence) {
     
-    indentSeg = segEls[getFirstSegInSentence(nextSentence)];
+    indentSegEl = segEls[getFirstSegInSentence(nextSentence)];
     indent = indentsBySentence[nextSentence];
   
-    indentSeg.style.marginLeft = indent + 'px';
+    indentSegEl.style.marginLeft = indent + 'px';
   }
 }
 
 function unindent() {
   
-  if (indentSeg) {
+  if (indentSegEl) {
     
-    indentSeg.style.marginLeft = '';
-    indentSeg = null; // Unnecessary?
+    indentSegEl.style.marginLeft = '';
+    indentSegEl = null; // Unnecessary?
   }
 }
 
-function showCard(targetCardIndex) {
+function showCard(targetCardIndex) { // Unfinished
   
   show(cardEls[targetCardIndex]);
 }
 
-function hideCard(targetCardIndex) {
+function hideCard(targetCardIndex) { // Unfinished
   
   hide(cardEls[targetCardIndex]);
 }
 
 function toggleCard(targetCardIndex) {
   
-  if (currentCardIndex !== null) {
+  if (currentCardIndex !== null) { // If currentSegIndex is in card being closed, it should be changed to first/last seg in prevVisSentence (depending on segMode)
     
     hide(cardEls[currentCardIndex]);
     unindent();
@@ -81,6 +80,30 @@ function toggleCard(targetCardIndex) {
   } else {
     
     currentCardIndex = null;
+  }
+}
+
+function toggleNextCard() {
+  
+  if (currentCardIndex === null) {
+    
+    toggleCard(0)
+    
+  } else if (cardEls[currentCardIndex + 1]) {
+    
+    toggleCard(currentCardIndex + 1);
+  }
+}
+
+function togglePrevCard() {
+  
+  if (currentCardIndex === null) {
+    
+    toggleCard(cardEls.length - 1);
+    
+  } else if (cardEls[currentCardIndex - 1]) { // Or if (cCI > 0)
+    
+    toggleCard(currentCardIndex - 1);
   }
 }
 
@@ -158,25 +181,69 @@ function getNextVisSentence(sentenceIndex) {
 
 //
 
-function togglePlayAll() {
+function togglePlayAllMode() {
   if (audio.paused) {
-    playAll = true;
+    playAllMode = true;
     next();
   } else {
-    playAll = !playAll;
+    playAllMode = !playAllMode;
   }
 }
 
-function next() { // Temp
-  playSeg(currentSegIndex + 1)
+function toggleSegMode() {
+  segMode = !segMode;
 }
 
-/*function next() {
-  var nextVisibleIndex = getNextVisibleIndex();
-  if (nextVisibleIndex !== undefined) {
-    playSeg(nextVisibleIndex);
+function prev() { // Unfinished
+  
+  if (segEls[currentSegIndex]) { // Temp
+    
+    segEls[currentSegIndex].style.background = '';
   }
-}*/
+  
+  if (segMode && getPrevSiblingSeg(currentSegIndex) != null) { // != null OK?
+    
+    console.log('a');
+    currentSegIndex = getPrevSiblingSeg(currentSegIndex);
+    
+  } else if (segMode && getPrevVisSentence(parentSentencesBySeg[currentSegIndex]) !== null) { // != null?
+    
+    console.log('b');
+    currentSegIndex = getLastSegInSentence(getPrevVisSentence(parentSentencesBySeg[currentSegIndex])); // Too long
+    
+  } else if (getPrevVisSentence(parentSentencesBySeg[currentSegIndex]) !== null) { // != null?
+    
+    console.log('c');
+    currentSegIndex = getFirstSegInSentence(getPrevVisSentence(parentSentencesBySeg[currentSegIndex])); // Too long
+  }
+  
+  console.log(currentSegIndex);
+  segEls[currentSegIndex].style.background = '#fff';
+}
+
+function next() { // Unfinished
+  
+  if (segEls[currentSegIndex]) { // Temp
+    
+    segEls[currentSegIndex].style.background = '';
+  }
+  
+  if (currentSegIndex === -1) { // OK? How to handle index -1?
+    
+    currentSegIndex = 0;
+    
+  } else if (segMode && getNextSiblingSeg(currentSegIndex)) { // !== null?
+
+    currentSegIndex = getNextSiblingSeg(currentSegIndex);
+    
+  } else if (getNextVisSentence(parentSentencesBySeg[currentSegIndex])) { // !== null?
+    
+    currentSegIndex = getFirstSegInSentence(getNextVisSentence(parentSentencesBySeg[currentSegIndex])); // Too long
+  }
+  
+  console.log(currentSegIndex);
+  segEls[currentSegIndex].style.background = '#fff';
+}
 
 function playSeg(index) { // Temp
   currentSegIndex = index;
@@ -283,7 +350,18 @@ function handleKeydown(e) {
   switch(e.keyCode) {
     case 32:
       e.preventDefault();
-      togglePlayAll();
+      togglePlayAllMode();
+      break;
+    case 37:
+      e.preventDefault();
+      prev();
+      break;
+    case 39:
+      e.preventDefault();
+      next();
+      break;
+    case 83:
+      toggleSegMode();
       break;
   }
 }
@@ -366,39 +444,6 @@ var parentCardsBySentence = [null, null, 0, 0, 1, null, null, 2, 2, 2];
 var nextSentencesByCard = [5, 5, null];
 
 var indentsBySentence = [0, 148, null, null, null, 269, 129, null, null, null]; // Possible there will be text sentences that don't follow cards in any mode (like 1 and 6 here). Don't bother getting their indents? Could speed things up just a bit?
-
-//
-
-// Rethink getIndents() and getOffsets() (no array of just textSegs)
-
-/*function getOffsets() { // Might not need both top and left anymore
-  
-  var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-  var scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
-  
-  var columnRect = columnEl.getBoundingClientRect();
-  
-  var top = columnRect.top - scrollTop;
-  var left = columnRect.left - scrollLeft;
-  
-  return {
-    top: top,
-    left: left
-  }
-}
-
-function getIndents() { // Close and reopen current card (if any)?
-  
-  var offsets = getOffsets();
-  
-  for (var i = 0; i < numTextSentences; i++) {
-    indentsBySentence[i] = textSentenceEls[i].getClientRects()[0].left - offsets.left;
-  }
-}*/
-
-// On page load or resize
-
-/*getIndents();*/
 
 //
 
