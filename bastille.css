@@ -20,18 +20,23 @@ body {
 
 .sentence {
   position: relative;
-}
-
-.sentence {
   font-size: 29px;
   line-height: 44px;
   padding: 5.5px 0;
+}
+
+.seg {
+  padding: 5.5px 0; /*Temp*/
 }
 
 .card .sentence {
   font-size: 22px;
   line-height: 33px;
   padding: 4px 0;
+}
+
+.card .seg {
+  padding: 4px 0; /*Temp*/
 }
 
 .card {

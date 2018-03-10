@@ -4,27 +4,28 @@ var t0; // Temp
 var t1; // Temp
 
 var audio = document.getElementById('audio'); // audioEl?
-var playAllMode = false; // Rename?
-var segMode = true; // Rename?
 
 var columnEl = document.getElementById('column');
 
-var currentCardIndex = null;
+var playAllMode = false; // Rename?
+var segMode = true; // Rename?
+
+var currentCardIndex = null; // For multiple visible cards, could use array
 var currentSegIndex = -1;
 
 // Temp, below should be arrays, not HTMLCollections
 
 var slideboxEls = document.getElementsByClassName('slidebox');
-
+var cardEls = document.getElementsByClassName('card');
 var sentenceEls = document.getElementsByClassName('sentence');
 var segEls = document.getElementsByClassName('seg');
 
 var numSentences = sentenceEls.length;
 var numSegs = segEls.length;
 
-var cardEls = document.getElementsByClassName('card');
-
 var indentSegEl = null;
+
+var highlightedEl = null;
 
 // Notes
 
@@ -138,13 +139,13 @@ function getLastSegInSentence(sentenceIndex) {
   }
 }
 
-function getPrevSiblingSeg(segIndex) {
+function getPrevSiblingSeg(segIndex) { // No arg returns NaN; OK?
   if (parentSentencesBySeg[segIndex - 1] === parentSentencesBySeg[segIndex]) {
     return segIndex - 1;
   }
 }
 
-function getNextSiblingSeg(segIndex) {
+function getNextSiblingSeg(segIndex) { // No arg returns NaN; OK?
   if (parentSentencesBySeg[segIndex + 1] === parentSentencesBySeg[segIndex]) {
     return segIndex + 1;
   }
@@ -152,12 +153,12 @@ function getNextSiblingSeg(segIndex) {
 
 function isVisSentence(sentenceIndex) { // Merge with isVisSeg()?
   var parentCardIndex = parentCardsBySentence[sentenceIndex];
-  return (parentCardIndex === null || parentCardIndex === currentCardIndex);
+  return (parentCardIndex === null || parentCardIndex === currentCardIndex); // For multiple visible cards, could use array
 }
 
 function isVisSeg(segIndex) { // Merge with isVisSentence()?
   var parentCardIndex = parentCardsBySentence[parentSentencesBySeg[segIndex]];
-  return (parentCardIndex === null || parentCardIndex === currentCardIndex);
+  return (parentCardIndex === null || parentCardIndex === currentCardIndex); // For multiple visible cards, could use array
 }
 
 function isValidSentenceIndex(sentenceIndex) { // Merge?
@@ -221,6 +222,7 @@ function togglePlayAllMode() {
 
 function toggleSegMode() {
   segMode = !segMode;
+  highlight(); // Temp
 }
 
 //
@@ -260,16 +262,10 @@ function prev() { // Temp, almost identical to next(), merge?
   
   if (targetSegIndex !== undefined) {
     
-    if (segEls[currentSegIndex]) { // Temp
-      segEls[currentSegIndex].style.background = '';
-    }
-
     currentSegIndex = targetSegIndex;
-
     console.log(currentSegIndex); // Temp
-
-    segEls[currentSegIndex].style.background = '#fff';
     playSeg(currentSegIndex);
+    highlight();
   }
 }
 
@@ -291,16 +287,10 @@ function next() { // Temp, almost identical to prev(), merge?
   
   if (targetSegIndex !== undefined) {
     
-    if (segEls[currentSegIndex]) { // Temp
-      segEls[currentSegIndex].style.background = '';
-    }
-
     currentSegIndex = targetSegIndex;
-
     console.log(currentSegIndex); // Temp
-
-    segEls[currentSegIndex].style.background = '#fff';
     playSeg(currentSegIndex);
+    highlight();
   }
 }
 
@@ -309,6 +299,68 @@ function playSeg(index) { // Temp
   audio.currentTime = times[currentSegIndex][0];
   if (audio.paused) {
     audio.play();
+  }
+}
+
+//
+
+function animate() { // Temp
+  
+  if (!audio.paused) {
+    checkStop();
+  }
+  
+  requestAnimationFrame(animate);
+}
+
+animate();
+
+function checkStop() { // Temp
+  
+  if (audio.currentTime > times[currentSegIndex][1]) {
+    if (playAllMode) {
+      if (getNextVisSeg === undefined) {
+        audio.pause();
+        playAllMode = false;
+        return;
+      } else if (parentCardsBySentence[parentSentencesBySeg[currentSegIndex]] === null && parentCardsBySentence[parentSentencesBySeg[getNextVisSeg(currentSegIndex)]] !== null && audio.currentTime < times[getNextVisSeg(currentSegIndex)][0] - 1) {
+        audio.currentTime = times[getNextVisSeg(currentSegIndex)][0] - 1;
+      }
+    } else if (segMode || getNextSiblingSeg(currentSegIndex) === undefined) {
+      audio.pause();
+      return;
+    }
+  }
+  
+  if (audio.currentTime > times[getNextVisSeg(currentSegIndex)][0]) {
+    
+    currentSegIndex = getNextVisSeg(currentSegIndex);
+    console.log(currentSegIndex);
+    highlight();
+  }
+}
+
+// Temp highlight
+
+function highlight() {
+  
+  if (highlightedEl) {
+    
+    highlightedEl.style.background = '';
+  }
+  
+  if (segMode) {
+      
+    highlightedEl = segEls[currentSegIndex];
+
+  } else {
+
+    highlightedEl = sentenceEls[parentSentencesBySeg[currentSegIndex]];
+  }
+  
+  if (highlightedEl) {
+    
+    highlightedEl.style.background = '#fff';
   }
 }
 
