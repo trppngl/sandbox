@@ -8,24 +8,24 @@ var audio = document.getElementById('audio'); // audioEl?
 var columnEl = document.getElementById('column');
 
 var playAllMode = false; // Rename?
-var segMode = true; // Rename?
 
 var currentCardIndex = null; // For multiple visible cards, could use array
-var currentSegIndex = -1;
+var currentSegIndex = -1; // null?
 
 // Temp, below should be arrays, not HTMLCollections
 
-var slideboxEls = document.getElementsByClassName('slidebox');
-var cardEls = document.getElementsByClassName('card');
-var sentenceEls = document.getElementsByClassName('sentence');
 var segEls = document.getElementsByClassName('seg');
-
-var numSentences = sentenceEls.length;
 var numSegs = segEls.length;
 
-var indentSegEl = null;
+var sentenceEls = document.getElementsByClassName('sentence');
+var numSentences = sentenceEls.length;
 
-var highlightedEl = null;
+var cardEls = document.getElementsByClassName('card');
+
+var slideboxEls = document.getElementsByClassName('slidebox');
+
+var indentedSegEl = null;
+var highlightedSegEl = null;
 
 // Notes
 
@@ -33,40 +33,38 @@ var highlightedEl = null;
 
 function indent() { // Works, but could be better?
   
-  var indent;
-  var nextSentence = nextSentencesByCard[currentCardIndex];
+  var indent = indentsByCard[currentCardIndex];
+  var nextSegIndex = nextSegsByCard[currentCardIndex];
   
-  if (nextSentence) {
+  if (nextSegIndex) {
     
-    indentSegEl = segEls[getFirstSegInSentence(nextSentence)];
-    indent = indentsBySentence[nextSentence];
-  
-    indentSegEl.style.marginLeft = indent + 'px';
+    indentedSegEl = segEls[nextSegIndex];
+    indentedSegEl.style.marginLeft = indent + 'px';
   }
 }
 
 function unindent() {
   
-  if (indentSegEl) {
+  if (indentedSegEl) {
     
-    indentSegEl.style.marginLeft = '';
-    indentSegEl = null; // Unnecessary?
+    indentedSegEl.style.marginLeft = '';
+    indentedSegEl = null; // Unnecessary?
   }
 }
 
-function showCard(targetCardIndex) { // Unfinished
+/*function showCard(targetCardIndex) { // Unfinished
   
   show(cardEls[targetCardIndex]);
-}
+}*/
 
-function hideCard(targetCardIndex) { // Unfinished
+/*function hideCard(targetCardIndex) { // Unfinished
   
   hide(cardEls[targetCardIndex]);
-}
+}*/
 
 function toggleCard(targetCardIndex) {
   
-  if (currentCardIndex !== null) { // If currentSegIndex is in card being closed, it should be changed to first/last seg in prevVisSentence (depending on segMode)
+  if (currentCardIndex !== null) { // If currentSegIndex is in card being closed, change to seg just before card?
     
     hide(cardEls[currentCardIndex]);
     unindent();
@@ -84,7 +82,7 @@ function toggleCard(targetCardIndex) {
   }
 }
 
-function toggleNextCard() {
+/*function nextCard() {
   
   if (currentCardIndex === null) {
     
@@ -94,9 +92,9 @@ function toggleNextCard() {
     
     toggleCard(currentCardIndex + 1);
   }
-}
+}*/
 
-function togglePrevCard() {
+/*function prevCard() {
   
   if (currentCardIndex === null) {
     
@@ -106,93 +104,35 @@ function togglePrevCard() {
     
     toggleCard(currentCardIndex - 1);
   }
-}
+}*/
 
 // Helper functions
 
-function show(el) {
+function show(el) { // Maybe only need showCard()?
   if (el) { // Check if element?
     el.classList.remove('hide');
   }
 }
 
-function hide(el) {
+function hide(el) { // Maybe only need hideCard()?
   if (el) { // Check if element?
     el.classList.add('hide');
   }
 }
 
-function getFirstSegInSentence(sentenceIndex) {
-  if (isValidSentenceIndex(sentenceIndex)) {
-    return childSegsBySentence[sentenceIndex][0];
-  }
-}
-
-function getLastSegInSentence(sentenceIndex) {
-  
-  var lastSegIndex
-  
-  if (isValidSentenceIndex(sentenceIndex)) {
-    
-    lastSegIndex = childSegsBySentence[sentenceIndex].length - 1;
-    return childSegsBySentence[sentenceIndex][lastSegIndex];
-  }
-}
-
-function getPrevSiblingSeg(segIndex) { // No arg returns NaN; OK?
-  if (parentSentencesBySeg[segIndex - 1] === parentSentencesBySeg[segIndex]) {
-    return segIndex - 1;
-  }
-}
-
-function getNextSiblingSeg(segIndex) { // No arg returns NaN; OK?
-  if (parentSentencesBySeg[segIndex + 1] === parentSentencesBySeg[segIndex]) {
-    return segIndex + 1;
-  }
-}
-
-function isVisSentence(sentenceIndex) { // Merge with isVisSeg()?
-  var parentCardIndex = parentCardsBySentence[sentenceIndex];
+function isVisSeg(segIndex) {
+  var parentCardIndex = parentCardsBySeg[segIndex];
   return (parentCardIndex === null || parentCardIndex === currentCardIndex); // For multiple visible cards, could use array
 }
 
-function isVisSeg(segIndex) { // Merge with isVisSentence()?
-  var parentCardIndex = parentCardsBySentence[parentSentencesBySeg[segIndex]];
-  return (parentCardIndex === null || parentCardIndex === currentCardIndex); // For multiple visible cards, could use array
-}
-
-function isValidSentenceIndex(sentenceIndex) { // Merge?
-  return Boolean(sentenceEls[sentenceIndex]); // Use diff array?
-}
-
-function isValidSegIndex(segIndex) { // Merge?
+function isValidSegIndex(segIndex) {
   return (Boolean(segEls[segIndex]) || segIndex === -1); // Temp, needs to allow -1?
-}
-
-function getPrevVisSentence(sentenceIndex) { // Merge?
-  if (isValidSentenceIndex(sentenceIndex)) {
-    for (var i = sentenceIndex - 1; i >= 0; i--) {
-      if (isVisSentence(i)) {
-        return i;
-      }
-    }
-  }
 }
 
 function getPrevVisSeg(segIndex) { // Merge?
   if (isValidSegIndex(segIndex)) {
     for (var i = segIndex - 1; i >= 0; i--) {
       if (isVisSeg(i)) {
-        return i;
-      }
-    }
-  }
-}
-
-function getNextVisSentence(sentenceIndex) { // Merge?
-  if (isValidSentenceIndex(sentenceIndex)) {
-    for (var i = sentenceIndex + 1; i < numSentences; i++) {
-      if (isVisSentence(i)) {
         return i;
       }
     }
@@ -220,39 +160,17 @@ function togglePlayAllMode() {
   }
 }
 
-function toggleSegMode() {
-  segMode = !segMode;
-  highlight(); // Temp
-}
-
 //
 
-function getPrevTargetSegIndex() { // Rename?
+function getPrevTargetSegIndex() { // Rename
   
-  var parentSentence;
-  
-  if (segMode) { // This part basically good
-    
-    if (audio.currentTime > times[currentSegIndex][0] + 0.25 || currentSegIndex === 0) { // Second condition prevents skipping but will probably also slow highlight
-      
-      return currentSegIndex;
-      
-    } else {
-      
-      return getPrevVisSeg(currentSegIndex);
-    }
-  } else { // This part could use further streamlining/reduction
-    
-    parentSentence = parentSentencesBySeg[currentSegIndex];
-    
-    if (audio.currentTime >  times[getFirstSegInSentence(parentSentence)][0] + 0.25) {
-      
-      return getFirstSegInSentence(parentSentence);
-      
-    } else {
-      
-      return getFirstSegInSentence(getPrevVisSentence(parentSentence));
-    }
+  if (audio.currentTime > times[currentSegIndex][0] + 0.25 || currentSegIndex === 0) { // Second condition prevents skipping but will probably also slow highlight
+
+    return currentSegIndex;
+
+  } else {
+
+    return getPrevVisSeg(currentSegIndex);
   }
 }
 
@@ -263,22 +181,14 @@ function prev() { // Temp, almost identical to next(), merge?
   if (targetSegIndex !== undefined) {
     
     currentSegIndex = targetSegIndex;
-    console.log(currentSegIndex); // Temp
     playSeg(currentSegIndex);
     highlight();
   }
 }
 
-function getNextTargetSegIndex() {
+function getNextTargetSegIndex() { // Rename
   
-  var parentSentence;
-  
-  if (segMode) {
-    return getNextVisSeg(currentSegIndex);
-  } else {
-    parentSentence = parentSentencesBySeg[currentSegIndex];
-    return getFirstSegInSentence(getNextVisSentence(parentSentence));
-  }
+  return getNextVisSeg(currentSegIndex);
 }
 
 function next() { // Temp, almost identical to prev(), merge?
@@ -288,13 +198,13 @@ function next() { // Temp, almost identical to prev(), merge?
   if (targetSegIndex !== undefined) {
     
     currentSegIndex = targetSegIndex;
-    console.log(currentSegIndex); // Temp
     playSeg(currentSegIndex);
     highlight();
   }
 }
 
 function playSeg(index) { // Temp
+  
   currentSegIndex = index;
   audio.currentTime = times[currentSegIndex][0];
   if (audio.paused) {
@@ -315,58 +225,32 @@ function animate() { // Temp
 
 animate();
 
-function checkStop() { // Temp
+//
+
+function checkStop() {
   
-  if (audio.currentTime > times[currentSegIndex][1]) {
-    if (playAllMode) {
-      if (getNextVisSeg === undefined) {
-        audio.pause();
-        playAllMode = false;
-        return;
-      } else if (parentCardsBySentence[parentSentencesBySeg[currentSegIndex]] === null && parentCardsBySentence[parentSentencesBySeg[getNextVisSeg(currentSegIndex)]] !== null && audio.currentTime < times[getNextVisSeg(currentSegIndex)][0] - 1) {
-        audio.currentTime = times[getNextVisSeg(currentSegIndex)][0] - 1;
-      }
-    } else if (segMode || getNextSiblingSeg(currentSegIndex) === undefined) {
-      audio.pause();
-      return;
-    }
-  }
-  
-  if (audio.currentTime > times[getNextVisSeg(currentSegIndex)][0]) {
-    
-    currentSegIndex = getNextVisSeg(currentSegIndex);
-    console.log(currentSegIndex);
-    highlight();
-  }
 }
 
 // Temp highlight
 
-function highlight() {
+function highlight() { // Temp, won't be needed
   
-  if (highlightedEl) {
+  if (highlightedSegEl) {
     
-    highlightedEl.style.background = '';
+    highlightedSegEl.style.background = '';
   }
   
-  if (segMode) {
-      
-    highlightedEl = segEls[currentSegIndex];
-
-  } else {
-
-    highlightedEl = sentenceEls[parentSentencesBySeg[currentSegIndex]];
-  }
+  highlightedSegEl = segEls[currentSegIndex];
   
-  if (highlightedEl) {
+  if (highlightedSegEl) {
     
-    highlightedEl.style.background = '#fff';
+    highlightedSegEl.style.background = '#fff';
   }
 }
 
 // Slide highlight
 
-/*function makeHighlightBoxes(lineRange) {
+/*function makeHighlightBoxes(lineRange) { // From bastille
   
   var box;
   var top;
@@ -404,7 +288,7 @@ function highlight() {
   highlightPane.appendChild(fragment);
 }*/
 
-function resizeSlidebox(index, left, width) {
+/*function resizeSlidebox(index, left, width) {
   
   slideboxEls[index].style = 'left: ' + left + 'px; width: ' + width + 'px;';
 }
@@ -437,7 +321,7 @@ function resizeSlideboxes(startBoxIndex, startOffset, endBoxIndex, endOffset) {
     
     slideboxEls[i].style = 'left: ' + left + 'px; width: ' + width + 'px;';
   } 
-}
+}*/
 
 // Event handlers
 
@@ -470,9 +354,6 @@ function handleKeydown(e) {
     case 39:
       e.preventDefault();
       next();
-      break;
-    case 83:
-      toggleSegMode();
       break;
   }
 }
@@ -554,26 +435,11 @@ var slideRects = [
   {top: 66, left: -365, width: 324},
 ]
 
-var childSegsBySentence = [
-  [0, 1, 2, 3],
-  [4, 5, 6, 7, 8, 9, 10],
-  [11, 12, 13, 14],
-  [15, 16, 17],
-  [18, 19, 20, 21, 22, 23],
-  [24],
-  [25, 26, 27],
-  [28],
-  [29],
-  [30, 31, 32, 33],
-];
+var parentCardsBySeg = [null, null, null, null, null, null, null, null, null, null, null, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, null, null, null, null, 2, 2, 2, 2, 2, 2];
 
-var parentSentencesBySeg = [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 6, 6, 6, 7, 8, 9, 9, 9, 9];
+var nextSegsByCard = [24, 24, null];
 
-var parentCardsBySentence = [null, null, 0, 0, 1, null, null, 2, 2, 2];
-
-var nextSentencesByCard = [5, 5, null];
-
-var indentsBySentence = [0, 148, null, null, null, 269, 129, null, null, null]; // Possible there will be text sentences that don't follow cards in any mode (like 1 and 6 here). Don't bother getting their indents? Could speed things up just a bit?
+var indentsByCard = [269, 269, null]; // Do this by card? By sentence? By seg?
 
 //
 
