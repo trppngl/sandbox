@@ -70,7 +70,7 @@ function toggleCard(targetCardIndex) {
     unindent();
   }
   
-  if (targetCardIndex !== null && targetCardIndex !== currentCardIndex) {
+  if (targetCardIndex !== undefined && targetCardIndex !== currentCardIndex) {
     
     currentCardIndex = targetCardIndex;
     show(cardEls[currentCardIndex]);
@@ -82,7 +82,7 @@ function toggleCard(targetCardIndex) {
   }
 }
 
-/*function nextCard() {
+function nextCard() {
   
   if (currentCardIndex === null) {
     
@@ -92,9 +92,9 @@ function toggleCard(targetCardIndex) {
     
     toggleCard(currentCardIndex + 1);
   }
-}*/
+}
 
-/*function prevCard() {
+function prevCard() {
   
   if (currentCardIndex === null) {
     
@@ -104,7 +104,7 @@ function toggleCard(targetCardIndex) {
     
     toggleCard(currentCardIndex - 1);
   }
-}*/
+}
 
 // Helper functions
 
@@ -180,9 +180,7 @@ function prev() { // Temp, almost identical to next(), merge?
   
   if (targetSegIndex !== undefined) {
     
-    currentSegIndex = targetSegIndex;
-    playSeg(currentSegIndex);
-    highlight();
+    playSeg(targetSegIndex);
   }
 }
 
@@ -197,16 +195,21 @@ function next() { // Temp, almost identical to prev(), merge?
   
   if (targetSegIndex !== undefined) {
     
-    currentSegIndex = targetSegIndex;
-    playSeg(currentSegIndex);
-    highlight();
+    playSeg(targetSegIndex);
   }
 }
 
-function playSeg(index) { // Temp
+function playSeg(targetSegIndex) { // Temp
   
-  currentSegIndex = index;
+  if (targetSegIndex !== currentSegIndex) {
+    
+    highlight(targetSegIndex);
+  } 
+  
+  currentSegIndex = targetSegIndex;
+  
   audio.currentTime = times[currentSegIndex][0];
+  
   if (audio.paused) {
     audio.play();
   }
@@ -227,20 +230,27 @@ animate();
 
 //
 
-function checkStop() {
+function checkStop() { // Temp
   
+  if (audio.currentTime >= times[currentSegIndex][1]) { // >=?
+    
+    if (!playAllMode) {
+      
+      audio.pause(); // pauseAudio function that also stops loop?
+    }
+  }
 }
 
 // Temp highlight
 
-function highlight() { // Temp, won't be needed
+function highlight(targetSegIndex) { // Temp, won't be needed
   
   if (highlightedSegEl) {
     
     highlightedSegEl.style.background = '';
   }
   
-  highlightedSegEl = segEls[currentSegIndex];
+  highlightedSegEl = segEls[targetSegIndex];
   
   if (highlightedSegEl) {
     
@@ -354,6 +364,16 @@ function handleKeydown(e) {
     case 39:
       e.preventDefault();
       next();
+      break;
+    case 188:
+      prevCard();
+      break;
+    case 190:
+      nextCard();
+      break;
+    case 191:
+      e.preventDefault();
+      toggleCard();
       break;
   }
 }
