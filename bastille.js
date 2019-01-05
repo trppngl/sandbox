@@ -1,266 +1,244 @@
-'use strict';
+var audio = document.getElementById('audio');
 
-var t0; // Temp
-var t1; // Temp
+var segs = [];
+segs.push.apply(segs, document.getElementsByClassName('seg'));
+var numSegs = segs.length;
 
-var audio = document.getElementById('audio'); // audioEl?
+// Use IIFE as below or something else?
+// Somehow do below while initially making segs array?
+
+(function () {
+  for (var i = 0; i < numSegs; i += 1) {
+    segs[i].id = i;
+  }
+})();
+
+var notes = [];
+notes.push.apply(notes, document.getElementsByClassName('note'));
+// var numNotes = notes.length; // Needed?
+
+var currentIndex = -1;
+
+var playAll = false;
+
+var audioTimer;
+
+var textSegs = []; // Needed? Only used in one place...
+textSegs.push.apply(textSegs, document.getElementsByClassName('text-seg'));
+var numTextSegs = textSegs.length; // Needed?
+
+//
+
+var column = document.getElementById('column');
+
+var highlightPane = document.getElementById('highlight-pane');
+
+var segs = [];
+segs.push.apply(segs, document.getElementsByClassName('seg'));
+var numSegs = segs.length;
+
+var segRanges = [];
+
+(function () {
+  for (var i = 0; i < numSegs; i += 1) {
+    segs[i].id = i;
+  }
+})();
+
+var fragment = document.createDocumentFragment();
+
+var extensionWidth = 7;
+
+// ease-in-out (.42,0,.58,1) 30 frames
+// var easingMultipliers = [0.00213, 0.00865, 0.01972, 0.03551, 0.05613, 0.08166, 0.11211, 0.14741, 0.18740, 0.23177, 0.28013, 0.33188, 0.38635, 0.44269, 0.50000, 0.55731, 0.61365, 0.66812, 0.71987, 0.76823, 0.81260, 0.85259, 0.88789, 0.91834, 0.94387, 0.96449, 0.98028, 0.99135, 0.99787, 1.00000] // 0.00000?
+
+// default ease (.25,.1,.25,1) 15 frames
+var easingMultipliers = [0.05020, 0.15242, 0.29524, 0.44476, 0.57586, 0.68254, 0.76715, 0.83357, 0.88523, 0.92482, 0.95443, 0.97563, 0.98967, 0.99753, 1.00000] // 0.00000?
+
+var totalFrames = easingMultipliers.length; // ...length - 1?
+var currentFrame = -1;
+
+var currentSeg = -1;
+
+var slideHighlight = {
+  start: new MovingPos(),
+  end: new MovingPos()
+}
+
+var visLineRects = getLineRectsFromEls(segs);
+
+var request;
+
+var frameTimes = []; //
+
+// Init functions from sandbox
 
 var columnEl = document.getElementById('column');
 
-var playAllMode = false; // Rename?
+var currentCardIndex = null;
 
-var currentCardIndex = null; // For multiple visible cards, could use array
-var currentSegIndex = -1; // null?
+var sentenceEls = [];
+var cardEls = [];
+var cardSentenceIndexes = [];
+var numSentences = 0;
 
-// Temp, below should be arrays, not HTMLCollections
-
-var segEls = document.getElementsByClassName('seg');
-var numSegs = segEls.length;
-
-var sentenceEls = document.getElementsByClassName('sentence');
-var numSentences = sentenceEls.length;
-
-var cardEls = document.getElementsByClassName('card');
-
-var slideboxEls = document.getElementsByClassName('slidebox');
-
-var indentedSegEl = null;
-var highlightedSegEl = null;
-
-// Notes
-
-// Put indent() and unindent() inside toggleCard()?
-
-function indent() { // Works, but could be better?
+(function () {
   
-  var indent = indentsByCard[currentCardIndex];
-  var nextSegIndex = nextSegsByCard[currentCardIndex];
+  var paragraphs = document.getElementsByClassName('paragraph');
+  var el;
   
-  if (nextSegIndex) {
+  for (var i = 0; i < paragraphs.length; i++) {
     
-    indentedSegEl = segEls[nextSegIndex];
-    indentedSegEl.style.marginLeft = indent + 'px';
-  }
-}
-
-function unindent() {
-  
-  if (indentedSegEl) {
+    el = paragraphs[i].firstElementChild; // IE9+
     
-    indentedSegEl.style.marginLeft = '';
-    indentedSegEl = null; // Unnecessary?
-  }
-}
-
-/*function showCard(targetCardIndex) { // Unfinished
-  
-  show(cardEls[targetCardIndex]);
-}*/
-
-/*function hideCard(targetCardIndex) { // Unfinished
-  
-  hide(cardEls[targetCardIndex]);
-}*/
-
-function toggleCard(targetCardIndex) {
-  
-  if (currentCardIndex !== null) { // If currentSegIndex is in card being closed, change to seg just before card?
-    
-    hide(cardEls[currentCardIndex]);
-    unindent();
-  }
-  
-  if (targetCardIndex !== undefined && targetCardIndex !== currentCardIndex) {
-    
-    currentCardIndex = targetCardIndex;
-    show(cardEls[currentCardIndex]);
-    indent();
-    
-  } else {
-    
-    currentCardIndex = null;
-  }
-}
-
-function nextCard() {
-  
-  if (currentCardIndex === null) {
-    
-    toggleCard(0)
-    
-  } else if (cardEls[currentCardIndex + 1]) {
-    
-    toggleCard(currentCardIndex + 1);
-  }
-}
-
-function prevCard() {
-  
-  if (currentCardIndex === null) {
-    
-    toggleCard(cardEls.length - 1);
-    
-  } else if (cardEls[currentCardIndex - 1]) { // Or if (cCI > 0)
-    
-    toggleCard(currentCardIndex - 1);
-  }
-}
-
-// Helper functions
-
-function show(el) { // Maybe only need showCard()?
-  if (el) { // Check if element?
-    el.classList.remove('hide');
-  }
-}
-
-function hide(el) { // Maybe only need hideCard()?
-  if (el) { // Check if element?
-    el.classList.add('hide');
-  }
-}
-
-function isVisSeg(segIndex) {
-  var parentCardIndex = parentCardsBySeg[segIndex];
-  return (parentCardIndex === null || parentCardIndex === currentCardIndex); // For multiple visible cards, could use array
-}
-
-function isValidSegIndex(segIndex) {
-  return (Boolean(segEls[segIndex]) || segIndex === -1); // Temp, needs to allow -1?
-}
-
-function getPrevVisSeg(segIndex) { // Merge?
-  if (isValidSegIndex(segIndex)) {
-    for (var i = segIndex - 1; i >= 0; i--) {
-      if (isVisSeg(i)) {
-        return i;
-      }
-    }
-  }
-}
-
-function getNextVisSeg(segIndex) { // Merge?
-  if (isValidSegIndex(segIndex)) {
-    for (var i = segIndex + 1; i < numSegs; i++) {
-      if (isVisSeg(i)) {
-        return i;
-      }
-    }
-  }
-}
-
-//
-
-function togglePlayAllMode() {
-  if (audio.paused) {
-    playAllMode = true;
-    next();
-  } else {
-    playAllMode = !playAllMode;
-  }
-}
-
-//
-
-function getPrevTargetSegIndex() { // Rename
-  
-  if (audio.currentTime > times[currentSegIndex][0] + 0.25 || currentSegIndex === 0) { // Second condition prevents skipping but will probably also slow highlight
-
-    return currentSegIndex;
-
-  } else {
-
-    return getPrevVisSeg(currentSegIndex);
-  }
-}
-
-function prev() { // Temp, almost identical to next(), merge?
-  
-  var targetSegIndex = getPrevTargetSegIndex();
-  
-  if (targetSegIndex !== undefined) {
-    
-    playSeg(targetSegIndex);
-  }
-}
-
-function getNextTargetSegIndex() { // Rename
-  
-  return getNextVisSeg(currentSegIndex);
-}
-
-function next() { // Temp, almost identical to prev(), merge?
-  
-  var targetSegIndex = getNextTargetSegIndex();
-  
-  if (targetSegIndex !== undefined) {
-    
-    playSeg(targetSegIndex);
-  }
-}
-
-function playSeg(targetSegIndex) { // Temp
-  
-  if (targetSegIndex !== currentSegIndex) {
-    
-    highlight(targetSegIndex);
-  } 
-  
-  currentSegIndex = targetSegIndex;
-  
-  audio.currentTime = times[currentSegIndex][0];
-  
-  if (audio.paused) {
-    audio.play();
-  }
-}
-
-//
-
-function animate() { // Temp
-  
-  if (!audio.paused) {
-    checkStop();
-  }
-  
-  requestAnimationFrame(animate);
-}
-
-animate();
-
-//
-
-function checkStop() { // Temp
-  
-  if (audio.currentTime >= times[currentSegIndex][1]) { // >=?
-    
-    if (!playAllMode) {
+    while (el) {
       
-      audio.pause(); // pauseAudio function that also stops loop?
+      if (el.tagName === 'SPAN') {
+        
+        sentenceEls.push(el);
+        numSentences++;
+        
+      } else {
+        
+        cardEls.push(el);
+        cardSentenceIndexes.push(numSentences - 1);
+      }
+      
+      el = el.nextElementSibling; // IE9+
     }
   }
-}
+})();
 
-// Temp highlight
+var indents = new Array(numSentences);
 
-function highlight(targetSegIndex) { // Temp, won't be needed
+getIndents();
+
+function getIndents() { // Close and reopen current card (if any)?
   
-  if (highlightedSegEl) {
-    
-    highlightedSegEl.style.background = '';
-  }
+  var offsets = getOffsets();
   
-  highlightedSegEl = segEls[targetSegIndex];
-  
-  if (highlightedSegEl) {
-    
-    highlightedSegEl.style.background = '#fff';
+  for (var i = 0; i < numSentences; i++) {
+    indents[i] = sentenceEls[i].getClientRects()[0].left - offsets.left;
   }
 }
 
-// Slide highlight
+function getOffsets() { // Might not need both top and left anymore
+  
+  var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+  var scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
+  
+  var columnRect = columnEl.getBoundingClientRect();
+  
+  var top = columnRect.top - scrollTop;
+  var left = columnRect.left - scrollLeft;
+  
+  return {
+    top: top,
+    left: left
+  }
+}
 
-/*function makeHighlightBoxes(lineRange) { // From bastille
+//
+
+function getLineRectsFromEls(els) {
+  
+  var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+  var scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
+  
+  var columnRect = column.getBoundingClientRect();
+  var columnTop = columnRect.top;
+  var columnLeft = columnRect.left;
+  
+  var theseRects;
+  var lineRects = [];
+  var currentLineRect;
+  
+  var top;
+  var left;
+  var width;
+  
+  var startLine;
+  var startOffset;
+  var endLine;
+  var endOffset;
+  
+  els = [].concat(els || []); // var els?
+  
+  for (var i = 0; i < els.length; i++) {
+    
+    theseRects = els[i].getClientRects();
+    
+    for (var j = 0; j < theseRects.length; j++) {
+      
+      top = theseRects[j].top + scrollTop - columnTop;
+      left = theseRects[j].left + scrollLeft - columnLeft;
+      width = theseRects[j].width;
+      
+      if (!currentLineRect || currentLineRect.top !== top) {
+        
+        /* if (currentLineRect && currentLineRect.top !== top) {
+          currentLineRect.width += extensionWidth;
+        } */
+        
+        lineRects.push({
+          top: top,
+          left: left,
+          width: width
+        });
+        
+        currentLineRect = lineRects[lineRects.length - 1];
+        
+      } else {
+        
+        currentLineRect.width = left + width;
+        
+      }
+      
+      // Do two blocks below only if dealing with segs, not note highlights?
+      
+      // And will need to empty segRanges when calling getLineRectsFromEls()
+      
+      if (j === 0) {
+        startLine = lineRects.length - 1;
+        startOffset = left;
+      }
+      
+      if (j === theseRects.length - 1) {
+        endLine = lineRects.length - 1;
+        endOffset = currentLineRect.width;
+        
+        // segRanges[i] = new LineRange(startLine, startOffset, endLine, endOffset);
+        
+        segRanges[i] = {
+          start: {
+            line: startLine,
+            offset: startOffset
+          },
+          end: {
+            line: endLine,
+            offset: endOffset
+          }
+        };
+      }
+    }
+  }
+  
+  for (var k = 0; k < lineRects.length - 1; k++) {
+    
+    // Hacky way to exclude last line in paragraph
+    if (lineRects[k + 1] && lineRects[k + 1].top === lineRects[k].top + 44) {
+      lineRects[k].width += extensionWidth;
+    }
+  }
+  
+  // Totally temp
+  
+  lineRects[0].width -= 7;
+  
+  return lineRects;
+}
+
+function makeHighlightBoxes(lineRange) {
   
   var box;
   var top;
@@ -296,58 +274,389 @@ function highlight(targetSegIndex) { // Temp, won't be needed
   
   highlightPane.innerHTML = '';
   highlightPane.appendChild(fragment);
-}*/
-
-/*function resizeSlidebox(index, left, width) {
-  
-  slideboxEls[index].style = 'left: ' + left + 'px; width: ' + width + 'px;';
 }
 
-function resetSlidebox(index) {
-  
-  var left = slideRects[index].left;
-  
-  resizeSlidebox(index, left, 0);
+function MovingPos(line = 0, offset = 0, distance = 0, progress = 0) {
+  this.line = line,
+  this.offset = offset,
+  this.distance = distance,
+  this.progress = progress
 }
 
-function resizeSlideboxes(startBoxIndex, startOffset, endBoxIndex, endOffset) {
+MovingPos.prototype.isAbove = function(targetPos) {
   
-  var left;
-  var width;
+  if (this.line < targetPos.line || this.line === targetPos.line && this.offset < targetPos.offset) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+MovingPos.prototype.getDistanceTo = function(targetPos) {
   
-  for (var i = startBoxIndex; i <= endBoxIndex; i++) { // Was reversed (bottom-up) in bastille but can't remember why
+  var forward = this.isAbove(targetPos);
+  var distance = 0;
+  
+  var i;
+  var aboveOffset;
+  var belowLine;
+  var belowOffset;
+  
+  if (forward) {
+    i = this.line;
+    aboveOffset = this.offset;
+    belowLine = targetPos.line;
+    belowOffset = targetPos.offset;
+  } else {
+    i = targetPos.line;
+    aboveOffset = targetPos.offset;
+    belowLine = this.line;
+    belowOffset = this.offset;
+  }
+  
+  for (i; i <= belowLine; i++) {
+    distance += visLineRects[i].width;
+  }
+  
+  distance -= aboveOffset + visLineRects[belowLine].width - belowOffset;
+  
+  if (!forward) {
+    distance = 0 - distance;
+  }
     
-    left = slideRects[i].left;
-    width = slideRects[i].width;
-    
-    if (i === endBoxIndex) {
-      width = endOffset;
+  this.distance = distance;
+  this.progress = 0;
+  
+  return this;
+}
+
+MovingPos.prototype.changePos = function(frame, isEnd) {
+  
+  var increment = Math.round(this.distance * easingMultipliers[frame] - this.progress);
+  
+  var nudge; // Rename?
+  
+  if (isEnd) {
+    nudge = -1;
+  } else {
+    nudge = 0;
+  }
+  
+  this.progress += increment;
+  this.offset += increment;
+  
+  // When going backward, nudge makes it so start offset = 0 remains on that line, end offset = 0 moves up a line
+  while (this.line > 0 && this.offset + nudge < 0) {
+    this.line--;
+    this.offset += visLineRects[this.line].width;
+  }
+  
+  // When going forward, nudge makes it so start offset = line width moves down a line, end offset = line width remains on that line
+  while (this.line < visLineRects.length - 1 && this.offset + nudge >= visLineRects[this.line].width) {
+    this.offset -= visLineRects[this.line].width;
+    this.line++;
+  }
+  
+  return this;
+}
+
+function playSeg(index, click) {
+  
+  var targetSegRange = segRanges[index];
+  
+  slideHighlight.start.getDistanceTo(targetSegRange.start);
+  slideHighlight.end.getDistanceTo(targetSegRange.end);
+  
+  if (click) {
+    currentFrame = totalFrames - 1;
+  } else {
+    currentFrame = 0;
+  }
+  
+  currentIndex = index;
+  audio.currentTime = times[currentIndex][0];
+  if (audio.paused) {
+    playAudio();
+  }
+  
+  cancelAnimationFrame(request);
+  request = requestAnimationFrame(animate);
+}
+
+function animate() {
+  
+  slideHighlight.start.changePos(currentFrame);
+  slideHighlight.end.changePos(currentFrame, true);
+  
+  makeHighlightBoxes(slideHighlight); // Or pass start, end?
+  
+  if (currentFrame < totalFrames - 1) {
+    currentFrame++
+    request = requestAnimationFrame(animate);
+  } else {
+    currentFrame = -1;
+  }
+}
+
+// // //
+
+// For older browsers that don't have nextElementSibling
+function getNextElementSibling(el) {
+  if (el.nextElementSibling) {
+    return el.nextElementSibling;
+  } else {
+    do {
+      el = el.nextSibling;
+    } while (el && el.nodeType !== 1);
+    return el;
+  }
+}
+
+// Should this go here or elsewhere?
+function getNextSeg(el) {
+  do {
+    el = getNextElementSibling(el);
+  } while (el && el.classList.contains('seg') !== true);
+  return el;
+}
+
+// Indentation
+
+// In FF, first rect empty if wrap pushes span to start on new line 
+function getSegLeft(seg) {
+  var rects = seg.getClientRects();
+  for (var i = 0; i < rects.length; i += 1) {
+    if (rects[i].width) {
+      return rects[i].left;
     }
-    
-    if (i === startBoxIndex) {
-      left += startOffset;
-      width -= startOffset;
+  }
+}
+
+function getTextLeft() {
+  var textLeft = getSegLeft(textSegs[0]);
+  return textLeft;
+}
+
+function indent(arrayOrSeg) { // Array not needed?
+  var segLeft;
+  var segIndent;
+  var textLeft = getTextLeft();
+  var sgs = [].concat(arrayOrSeg || []).reverse(); // Bottom-up
+  for (var i = 0; i < sgs.length; i += 1) { // Does top seg, no need
+    segLeft = getSegLeft(sgs[i]);
+    segIndent = segLeft - textLeft;
+    if (segIndent) {
+      sgs[i].style.marginLeft = segIndent + 'px';
     }
-    
-    slideboxEls[i].style = 'left: ' + left + 'px; width: ' + width + 'px;';
-  } 
+  }
+}
+
+// Show and hide notes
+
+/*function hideNotes(arrayOrNote) {
+  var nts = [].concat(arrayOrNote || []);
+  for (var i = 0; i < nts.length; i += 1) {
+    if (getNextSeg(nts[i])) {
+      getNextSeg(nts[i]).style.marginLeft = '';
+    }
+    nts[i].classList.add('hide');
+  }
+}
+
+function showNotes(arrayOrNote) {
+  var nts = [].concat(arrayOrNote || []);
+  console.log(nts);
+  hideNotes(notes);
+  // For each note to be shown...
+  for (var i = 0; i < nts.length; i += 1) {
+    // ...indent seg underneath...
+    indent(getNextSeg(nts[i]));
+    // ...and show that note
+    nts[i].classList.remove('hide');
+  }
 }*/
+
+// Show/hide/indent/unindent/toggle functions from sandbox
+
+function show(el) {
+  if (el) {
+    el.classList.remove('hide');
+  }
+}
+
+function hide(el) {
+  if (el) {
+    el.classList.add('hide');
+  }
+}
+
+//
+
+function indent(sentenceIndex) {
+  
+  if (sentenceIndex < numSentences) {
+    sentenceEls[sentenceIndex].style.marginLeft = indents[sentenceIndex] + 'px';
+  }
+}
+
+function unindent(sentenceIndex) {
+  
+  if (sentenceIndex < numSentences) {
+    sentenceEls[sentenceIndex].style.marginLeft = '';
+  }
+}
+
+// Temporary
+
+function moveHighlight(move) {
+  if (segs[currentIndex]) {
+    segs[currentIndex].classList.remove('highlight');
+  }
+  segs[move.targetIndex].classList.add('highlight');
+}
+
+//
+
+function startSeg(move) {
+  moveHighlight(move);
+  currentIndex = move.targetIndex;
+  if (move.skip) {
+    audio.currentTime = times[currentIndex][0];
+    if (audio.paused) {
+      playAudio();
+    }
+  }
+}
+
+function playAudio() {
+  audio.play();
+  audioTimer = window.setInterval(checkStop, 20);
+}
+
+function checkStop() {
+  var nextVisibleIndex;
+  
+  if (audio.currentTime > times[currentIndex][1]) {
+
+    if (!playAll) {
+      pauseAudio();
+      
+    } else {
+      nextVisibleIndex = getNextVisibleIndex();
+      
+      if (nextVisibleIndex === undefined) {
+        pauseAudio();
+        playAll = false;
+        
+      /*} else if (segData[nextVisibleIndex].sprite !== segData[currentIndex].sprite) {
+        playSeg(nextVisibleIndex);*/
+        
+      } else if (audio.currentTime > times[nextVisibleIndex][0]) {
+        playSeg(nextVisibleIndex);
+      }
+    }
+  }
+}
+
+function pauseAudio() {
+  audio.pause();
+  window.clearInterval(audioTimer);
+}
+
+function getNextVisibleIndex() {
+  var ndx = currentIndex + 1;
+  while (ndx < numSegs) { //
+    if (segs[ndx].offsetHeight) {
+      return ndx;
+    } else {
+      ndx += 1;
+    }
+  }
+}
+
+function getPrevVisibleIndex() {
+  var ndx = currentIndex - 1;
+  while (ndx >= 0) { 
+    if (segs[ndx].offsetHeight) {
+      return ndx;
+    } else {
+      ndx -= 1;
+    }
+  }
+}
+
+function next() {
+  var nextVisibleIndex = getNextVisibleIndex();
+  if (nextVisibleIndex !== undefined) {
+    playSeg(nextVisibleIndex);
+  }
+}
+
+// First function below results in audio "skipping" but good highlight movement. Second function below results in good audio but a highlight that slows way down as it nears the top. How to fix?
+
+function prev() {
+  var prevVisibleIndex = getPrevVisibleIndex();
+  var threshold = times[currentIndex][0] + 0.25;
+  if (audio.currentTime > threshold) {
+    playSeg(currentIndex);
+  } else if (prevVisibleIndex !== undefined) {
+    playSeg(prevVisibleIndex);
+  }
+}
+
+/*function prev() {
+  var prevVisibleIndex = getPrevVisibleIndex();
+  var threshold = times[currentIndex][0] + 0.25;
+  if (audio.currentTime > threshold || prevVisibleIndex === undefined) {
+    playSeg(currentIndex);
+  } else if (prevVisibleIndex) {
+    playSeg(prevVisibleIndex);
+  }
+}*/
+
+/*function prev() {
+  var prevVisibleIndex = getPrevVisibleIndex();
+  if (prevVisibleIndex !== undefined) {
+    playSeg(prevVisibleIndex);
+  }
+}
+
+function current() {
+  playSeg(currentIndex);
+}*/
+
+function togglePlayAll() {
+  if (audio.paused) {
+    playAll = true;
+    next();
+  } else {
+    playAll = !playAll;
+  }
+}
 
 // Event handlers
 
-function handleClick(e) { // Very temp!
-  
-  var elToElevate = e.target.closest('.sentence').querySelector('.highlight-group'); // Temp
-  var elFromPoint;
-  
-  if (elToElevate) {
-    elToElevate.style.zIndex = '1';
-    elFromPoint = document.elementFromPoint(e.clientX, e.clientY);
-    elToElevate.style.zIndex = '-1';
+/*function handleClick(e) {
+  var clickIndex;
+  if (e.target.classList.contains('seg')) {
+    clickIndex = Number(e.target.getAttribute('id'));
   }
+  if (clickIndex !== undefined) {
+    startSeg({
+      targetIndex: clickIndex,
+      skip: true
+    });
+  }
+}*/
+
+function handleClick(e) {
   
-  if (elFromPoint.dataset.card) {
-    toggleCard(Number(elFromPoint.dataset.card));
+  var index;
+  
+  if (e.target.classList.contains('seg')) {
+    
+    index = Number(e.target.getAttribute('id'));
+    playSeg(index, true);
   }
 }
 
@@ -355,7 +664,7 @@ function handleKeydown(e) {
   switch(e.keyCode) {
     case 32:
       e.preventDefault();
-      togglePlayAllMode();
+      togglePlayAll();
       break;
     case 37:
       e.preventDefault();
@@ -365,104 +674,28 @@ function handleKeydown(e) {
       e.preventDefault();
       next();
       break;
-    case 188:
-      prevCard();
-      break;
-    case 190:
-      nextCard();
-      break;
-    case 191:
+    case 40:
       e.preventDefault();
-      toggleCard();
+      togglePlayAll();
       break;
   }
 }
 
 // Event listeners
 
-document.addEventListener('click', handleClick); // columnEl?
-document.addEventListener('keydown', handleKeydown);
-
-// Arrays temporarily populated manually
-
-var times = [
-  [356.908, 358.217],
-  [358.244, 360.619],
-  [360.842, 364.097],
-  [364.097, 365.352],
-  [366.617, 369.518],
-  [369.518, 370.272],
-  [370.272, 372.331],
-  [372.468, 373.928],
-  [374.053, 374.937],
-  [374.937, 376.306],
-  [376.692, 380.103],
-  [423.960, 426.252], // Les prix...
-  [426.252, 428.298],
-  [428.423, 429.948],
-  [430.072, 432.614], // ...a manger.
-  [433.848, 436.900], // Il y a dans...
-  [437.201, 441.422],
-  [441.422, 444.472], // ...de nourriture.
-  [446.365, 451.690], // Face à...
-  [452.050, 455.765],
-  [456.124, 458.092],
-  [458.092, 459.624],
-  [459.920, 460.490],
-  [460.490, 462.570], // ...la société française.
-  [381.499, 386.316], // Le roi...sur Terre.
-  [387.897, 392.791], // Un des rois...
-  [392.952, 394.813],
-  [394.984, 397.363], // ...le roi soleil.
-  [405.043, 411.709], // En 1789...mauvaise.
-  [412.197, 414.035], // La France...en crise.
-  [414.789, 416.895], // Elle a...
-  [417.071, 419.061],
-  [419.498, 420.240],
-  [420.240, 423.048], // ...ses dettes.
-]
-
-var slideRects = [
-  {top: 0, left: 0, width: 470},
-  {top: 44, left: 0, width: 463},
-  {top: 88, left: 0, width: 148},
-  {top: 0, left: 0, width: 330},
-  {top: 44, left: -148, width: 476},
-  {top: 88, left: -148, width: 430},
-  {top: 132, left: -148, width: 269},
-  {top: 0, left: 0, width: 417},
-  {top: 33, left: 0, width: 416},
-  {top: 66, left: 0, width: 160},
-  {top: 0, left: 0, width: 425},
-  {top: 33, left: 0, width: 424},
-  {top: 66, left: 0, width: 384},
-  {top: 0, left: 0, width: 406},
-  {top: 33, left: 0, width: 399},
-  {top: 66, left: 0, width: 438},
-  {top: 99, left: 0, width: 314},
-  {top: 0, left: 0, width: 100},
-  {top: 44, left: -269, width: 460},
-  {top: 88, left: -269, width: 129},
-  {top: 0, left: 0, width: 336},
-  {top: 44, left: -129, width: 431},
-  {top: 88, left: -129, width: 452},
-  {top: 132, left: -129, width: 81},
-  {top: 0, left: 0, width: 424},
-  {top: 33, left: 0, width: 136},
-  {top: 0, left: 0, width: 207},
-  {top: 0, left: 0, width: 50},
-  {top: 33, left: -365, width: 436},
-  {top: 66, left: -365, width: 324},
-]
-
-var parentCardsBySeg = [null, null, null, null, null, null, null, null, null, null, null, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, null, null, null, null, 2, 2, 2, 2, 2, 2];
-
-var nextSegsByCard = [24, 24, null];
-
-var indentsByCard = [269, 269, null]; // Do this by card? By sentence? By seg?
+document.addEventListener('click', handleClick, false);
+document.addEventListener('keydown', handleKeydown, false);
 
 //
 
-/*t0 = performance.now();
-t1 = performance.now();
-console.log((t1 - t0).toFixed(3) + 'ms');*/
+var times = [
+  [356.908, 360.619],
+  [360.842, 365.352],
+  [366.617, 372.331],
+  [372.468, 376.306],
+  [376.692, 380.103],
+  [381.499, 386.316],
+  [387.897, 392.791],
+  [392.952, 397.363],
+  [398.459, 403.265],
+]

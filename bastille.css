@@ -1,16 +1,19 @@
 body {
-  background: #fff;
-  background: #f4f4f6;
-  color: rgba(0, 0, 0, 0.94);
+  background: #f4f4f6; /* white, lavender gray */
+  /*background: #f6f5f4;*/ /* white, gold gray */
+  /*background: #f7f7f5;*/ /* white, gold gray */
+  /*background: #f7f6f5;*/ /* white, gold gray */
+  /*background: #faf9f7;*/ /* white, gold gray */
+  /*background: #fff;*/ /* yellow */
+  color: rgba(0, 0, 0, 0.93);
   font-family: 'Linux Libertine', serif;
-  -webkit-font-feature-settings: 'kern', 'liga', 'clig', 'onum' 1;
-  font-feature-settings: 'kern', 'liga', 'clig', 'onum' 1; /* ? */
-  margin: 0; /* ? */
+  font-feature-settings: 'kern', 'liga', 'clig', 'onum' 1;
+  margin: 0;
   cursor: default;
 }
 
 #column {
-  position: relative;
+  position: relative; /* Only needed if highlight contained here */
   max-width: 484px;
   margin: 11px auto;
   /*background-image: linear-gradient(#eee 1px, transparent 1px);
@@ -25,241 +28,59 @@ body {
   padding: 5.5px 0;
 }
 
-.seg {
-  padding: 5.5px 0; /*Temp*/
+.text-seg {
+  padding: 5.5px 0;
 }
 
-.card .sentence {
+.note {
   font-size: 22px;
   line-height: 33px;
+  margin: 27.5px 22px;
+}
+
+.note span {
+  /*background: hsla(43, 100%, 50%, 0.1);*/
   padding: 4px 0;
 }
 
-.card .seg {
-  padding: 4px 0; /*Temp*/
-}
-
-.card {
-  margin: 27.5px 22px; /* 5.5 = 11/2, 27.5 halfway b/w 22 and 33 */
-}
-
-.tempgraf {
-  margin: 22px 0;
-}
-
 ::-moz-selection {
-  background: rgba(100, 70, 70, 0.08);
+  background: rgba(50, 50, 50, 0.08);
 }
 
 ::selection {
   background: rgba(50, 50, 50, 0.08);
 }
 
+.highlight-box {
+  position: absolute;
+  /*margin: 5.5px 0;*/
+  height: 44px; /* 44px or 33px */
+  background: #fff; /*white*/
+  /*background: #fff9ea;*/
+  /*background: #ffecb9;*/ /* yellow */
+  /*opacity: 0.4;*/ /* yellow */
+  /*background: hsla(43, 100%, 50%, 0.1);*/
+}
+
+#highlight-pane {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -2; /* white */
+  /*z-index: -1;*/ /* yellow */
+}
+
 .highlight {
   display: inline-block;
   position: absolute;
   background: hsla(250, 100%, 50%, 0.055);
+  /*background: hsl(43, 100%, 50%);*/
+  /*opacity: 0.14;*/
   height: 33px;
+  z-index: -1;
   margin: 5.5px 0;
   top: 0;
-  z-index: -1;
-}
-
-.highlight-group { /* Rethink? */
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-#highlight0 {
-  top: 44px;
-  left: -51px;
-  width: 196px;
-}
-
-#highlight1 {
-  top: 44px;
-  left: -51px;
-  width: 83px;
-}
-
-#highlight2 {
-  top: 0px;
-  left: 235px;
-  width: 95px;
-}
-
-#highlight3 {
-  top: 44px;
-  left: 212px;
-  width: 84px;
-}
-
-.slidebox {
-  display: inline-block;
-  position: absolute;
-  background: hsla(43, 100%, 50%, 0.1);
-  background: #fff;
-  z-index: -1;
-  z-index: -2;
-}
-
-.slidebox {
-  height: 44px;
-}
-
-.card .slidebox {
-  height: 33px;
-}
-
-#slidebox0 {
-  top: 0px;
-  left: 0px;
-}
-
-#slidebox1 {
-  top: 44px;
-  left: 0px;
-}
-
-#slidebox2 {
-  top: 88px;
-  left: 0px;
-}
-
-#slidebox3 {
-  top: 0px;
-  left: 0px;
-}
-
-#slidebox4 {
-  top: 44px;
-  left: -148px;
-}
-
-#slidebox5 {
-  top: 88px;
-  left: -148px;
-}
-
-#slidebox6 {
-  top: 132px;
-  left: -148px;
-}
-
-#slidebox7 {
-  top: 0px;
-  left: 0px;
-}
-
-#slidebox8 {
-  top: 33px;
-  left: 0px;
-}
-
-#slidebox9 {
-  top: 66px;
-  left: 0px;
-}
-
-#slidebox10 {
-  top: 0px;
-  left: 0px;
-}
-
-#slidebox11 {
-  top: 33px;
-  left: 0px;
-}
-
-#slidebox12 {
-  top: 66px;
-  left: 0px;
-}
-
-#slidebox13 {
-  top: 0px;
-  left: 0px;
-}
-
-#slidebox14 {
-  top: 33px;
-  left: 0px;
-}
-
-#slidebox15 {
-  top: 66px;
-  left: 0px;
-}
-
-#slidebox16 {
-  top: 99px;
-  left: 0px;
-}
-
-#slidebox17 {
-  top: 0px;
-  left: 0px;
-}
-
-#slidebox18 {
-  top: 44px;
-  left: -269px;
-}
-
-#slidebox19 {
-  top: 88px;
-  left: -269px;
-}
-
-#slidebox20 {
-  top: 0px;
-  left: 0px;
-}
-
-#slidebox21 {
-  top: 44px;
-  left: -129px;
-}
-
-#slidebox22 {
-  top: 88px;
-  left: -129px;
-}
-
-#slidebox23 {
-  top: 132px;
-  left: -129px;
-}
-
-#slidebox24 {
-  top: 0px;
-  left: 0px;
-}
-
-#slidebox25 {
-  top: 33px;
-  left: 0px;
-}
-
-#slidebox26 {
-  top: 0px;
-  left: 0px;
-}
-
-#slidebox27 {
-  top: 0px;
-  left: 0px;
-}
-
-#slidebox28 {
-  top: 33px;
-  left: -343px;
-}
-
-#slidebox29 {
-  top: 66px;
-  left: -343px;
 }
 
 .hide {
