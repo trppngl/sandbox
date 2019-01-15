@@ -23,15 +23,15 @@ var playAll = false;
 
 var audioTimer;
 
-var textSegs = []; // Needed? Only used in one place...
+/*var textSegs = []; // Needed? Only used in one place...
 textSegs.push.apply(textSegs, document.getElementsByClassName('text-seg'));
-var numTextSegs = textSegs.length; // Needed?
+var numTextSegs = textSegs.length; // Needed?*/
 
 //
 
 var column = document.getElementById('column');
-
-var highlightPane = document.getElementById('highlight-pane');
+var textPane = document.getElementById('text-pane');
+var spotlightPane = document.getElementById('spotlight-pane');
 
 var segs = [];
 segs.push.apply(segs, document.getElementsByClassName('seg'));
@@ -47,7 +47,8 @@ var segRanges = [];
 
 var fragment = document.createDocumentFragment();
 
-var extensionWidth = 7;
+var extensionWidth = 0;
+/*var extensionWidth = 4;*/
 
 // ease-in-out (.42,0,.58,1) 30 frames
 // var easingMultipliers = [0.00213, 0.00865, 0.01972, 0.03551, 0.05613, 0.08166, 0.11211, 0.14741, 0.18740, 0.23177, 0.28013, 0.33188, 0.38635, 0.44269, 0.50000, 0.55731, 0.61365, 0.66812, 0.71987, 0.76823, 0.81260, 0.85259, 0.88789, 0.91834, 0.94387, 0.96449, 0.98028, 0.99135, 0.99787, 1.00000] // 0.00000?
@@ -60,7 +61,7 @@ var currentFrame = -1;
 
 var currentSeg = -1;
 
-var slideHighlight = {
+var slideSpotlight = {
   start: new MovingPos(),
   end: new MovingPos()
 }
@@ -82,7 +83,7 @@ var cardEls = [];
 var cardSentenceIndexes = [];
 var numSentences = 0;
 
-(function () {
+/*(function () {
   
   var paragraphs = document.getElementsByClassName('paragraph');
   var el;
@@ -120,7 +121,7 @@ function getIndents() { // Close and reopen current card (if any)?
   for (var i = 0; i < numSentences; i++) {
     indents[i] = sentenceEls[i].getClientRects()[0].left - offsets.left;
   }
-}
+}*/
 
 function getOffsets() { // Might not need both top and left anymore
   
@@ -231,14 +232,10 @@ function getLineRectsFromEls(els) {
     }
   }
   
-  // Totally temp
-  
-  lineRects[0].width -= 7;
-  
   return lineRects;
 }
 
-function makeHighlightBoxes(lineRange) {
+function makeSpotlightBoxes(lineRange) {
   
   var box;
   var top;
@@ -268,12 +265,12 @@ function makeHighlightBoxes(lineRange) {
     box.style.top = top + 'px';
     box.style.left = left + 'px';
     box.style.width = width + 'px';
-    box.classList.add('highlight-box'); // Change?
+    box.classList.add('spotlight-box'); // Change?
     fragment.appendChild(box); // Boxes appended in reverse; could push them to array and unreverse before appending
   }
   
-  highlightPane.innerHTML = '';
-  highlightPane.appendChild(fragment);
+  spotlightPane.innerHTML = '';
+  spotlightPane.appendChild(fragment);
 }
 
 function MovingPos(line = 0, offset = 0, distance = 0, progress = 0) {
@@ -364,8 +361,8 @@ function playSeg(index, click) {
   
   var targetSegRange = segRanges[index];
   
-  slideHighlight.start.getDistanceTo(targetSegRange.start);
-  slideHighlight.end.getDistanceTo(targetSegRange.end);
+  slideSpotlight.start.getDistanceTo(targetSegRange.start);
+  slideSpotlight.end.getDistanceTo(targetSegRange.end);
   
   if (click) {
     currentFrame = totalFrames - 1;
@@ -374,7 +371,9 @@ function playSeg(index, click) {
   }
   
   currentIndex = index;
+  console.log('currentIndex = ' + index + ';')
   audio.currentTime = times[currentIndex][0];
+  console.log(audio.currentTime);
   if (audio.paused) {
     playAudio();
   }
@@ -385,10 +384,10 @@ function playSeg(index, click) {
 
 function animate() {
   
-  slideHighlight.start.changePos(currentFrame);
-  slideHighlight.end.changePos(currentFrame, true);
+  slideSpotlight.start.changePos(currentFrame);
+  slideSpotlight.end.changePos(currentFrame, true);
   
-  makeHighlightBoxes(slideHighlight); // Or pass start, end?
+  makeSpotlightBoxes(slideSpotlight); // Or pass start, end?
   
   if (currentFrame < totalFrames - 1) {
     currentFrame++
@@ -423,7 +422,7 @@ function getNextSeg(el) {
 // Indentation
 
 // In FF, first rect empty if wrap pushes span to start on new line 
-function getSegLeft(seg) {
+/*function getSegLeft(seg) {
   var rects = seg.getClientRects();
   for (var i = 0; i < rects.length; i += 1) {
     if (rects[i].width) {
@@ -449,7 +448,7 @@ function indent(arrayOrSeg) { // Array not needed?
       sgs[i].style.marginLeft = segIndent + 'px';
     }
   }
-}
+}*/
 
 // Show and hide notes
 
@@ -478,7 +477,7 @@ function showNotes(arrayOrNote) {
 
 // Show/hide/indent/unindent/toggle functions from sandbox
 
-function show(el) {
+/*function show(el) {
   if (el) {
     el.classList.remove('hide');
   }
@@ -488,11 +487,11 @@ function hide(el) {
   if (el) {
     el.classList.add('hide');
   }
-}
+}*/
 
 //
 
-function indent(sentenceIndex) {
+/*function indent(sentenceIndex) {
   
   if (sentenceIndex < numSentences) {
     sentenceEls[sentenceIndex].style.marginLeft = indents[sentenceIndex] + 'px';
@@ -504,21 +503,21 @@ function unindent(sentenceIndex) {
   if (sentenceIndex < numSentences) {
     sentenceEls[sentenceIndex].style.marginLeft = '';
   }
-}
+}*/
 
 // Temporary
 
-function moveHighlight(move) {
+/*function moveSpotlight(move) {
   if (segs[currentIndex]) {
-    segs[currentIndex].classList.remove('highlight');
+    segs[currentIndex].classList.remove('spotlight');
   }
-  segs[move.targetIndex].classList.add('highlight');
-}
+  segs[move.targetIndex].classList.add('spotlight');
+}*/
 
 //
 
 function startSeg(move) {
-  moveHighlight(move);
+  moveSpotlight(move);
   currentIndex = move.targetIndex;
   if (move.skip) {
     audio.currentTime = times[currentIndex][0];
@@ -592,7 +591,7 @@ function next() {
   }
 }
 
-// First function below results in audio "skipping" but good highlight movement. Second function below results in good audio but a highlight that slows way down as it nears the top. How to fix?
+// First function below results in audio "skipping" but good spotlight movement. Second function below results in good audio but a spotlight that slows way down as it nears the top. How to fix?
 
 function prev() {
   var prevVisibleIndex = getPrevVisibleIndex();
@@ -619,11 +618,11 @@ function prev() {
   if (prevVisibleIndex !== undefined) {
     playSeg(prevVisibleIndex);
   }
-}
+}*/
 
 function current() {
   playSeg(currentIndex);
-}*/
+}
 
 function togglePlayAll() {
   if (audio.paused) {
@@ -651,6 +650,15 @@ function togglePlayAll() {
 
 function handleClick(e) {
   
+  var clientX = e.clientX;
+  var clientY = e.clientY;
+  var pageX = e.pageX;
+  var pageY = e.pageY;
+  
+  console.log(clientX, clientY);
+  console.log(pageX, pageY);
+  console.log(e.target);
+  
   var index;
   
   if (e.target.classList.contains('seg')) {
@@ -674,28 +682,35 @@ function handleKeydown(e) {
       e.preventDefault();
       next();
       break;
+  }
+}
+
+/*function handleKeydown(e) {
+  switch(e.keyCode) {
+    case 32:
+      e.preventDefault();
+      togglePlayAll();
+      break;
+    case 37:
+      e.preventDefault();
+      prev();
+      break;
+    case 38:
+      e.preventDefault();
+      current();
+      break;
+    case 39:
+      e.preventDefault();
+      next();
+      break;
     case 40:
       e.preventDefault();
       togglePlayAll();
       break;
   }
-}
+}*/
 
 // Event listeners
 
-document.addEventListener('click', handleClick, false);
+textPane.addEventListener('click', handleClick, false);
 document.addEventListener('keydown', handleKeydown, false);
-
-//
-
-var times = [
-  [356.908, 360.619],
-  [360.842, 365.352],
-  [366.617, 372.331],
-  [372.468, 376.306],
-  [376.692, 380.103],
-  [381.499, 386.316],
-  [387.897, 392.791],
-  [392.952, 397.363],
-  [398.459, 403.265],
-]

@@ -1,0 +1,41 @@
+body {
+  background: rgb(243, 242, 246);
+  color: rgba(0, 0, 0, 0.93);
+  font-family: 'Linux Libertine', serif;
+  font-feature-settings: 'kern', 'liga', 'clig', 'onum' 1;
+  cursor: default;
+  margin: 0;
+}
+
+#column {
+  max-width: 504px;
+  margin: 11px auto;
+  /*background-image: linear-gradient(#ddd 1px, transparent 1px);
+  background-size: 100% 11px;
+  box-shadow: 1px 0 #ddd, -1px 0 #ddd;*/
+}
+
+#text-pane {
+  padding: 0 10px;
+  background: pink;
+}
+
+p {
+  font-size: 29px;
+  line-height: 44px;
+  margin: 22px 0;
+}
+
+.seg {
+  padding: 5.5px 0;
+}
+
+::-moz-selection {
+  background: rgba(50, 50, 50, 0.08);
+}
+
+::selection {
+  background: rgba(50, 50, 50, 0.08);
+}
+
+/* Spotlight */
