@@ -8,16 +8,18 @@ body {
 }
 
 #column {
-  max-width: 504px;
-  margin: 11px auto;
+  position: relative; /**/
+  max-width: 505px;
+  margin: 0 auto;
   /*background-image: linear-gradient(#ddd 1px, transparent 1px);
   background-size: 100% 11px;
   box-shadow: 1px 0 #ddd, -1px 0 #ddd;*/
 }
 
 #text-pane {
-  padding: 0 10px;
-  background: pink;
+  margin: 0 0 0 7px; /**/
+  padding: 0 10.5px 0 3.5px;
+  /*background: rgb(225, 225, 225);*/ /**/
 }
 
 p {
@@ -27,15 +29,28 @@ p {
 }
 
 .seg {
-  padding: 5.5px 0;
+  /*padding: 5.5px 0;*/
+  /*background: rgba(230, 170, 170, 0.5);*/ /**/
 }
 
 ::-moz-selection {
   background: rgba(50, 50, 50, 0.08);
 }
-
+{}
 ::selection {
   background: rgba(50, 50, 50, 0.08);
 }
 
 /* Spotlight */
+
+#spotlight-pane { /* Doesn't seem to have right or bottom bounds? */
+  position: absolute; /**/
+  margin: 0 0 0 7px; /**/
+  z-index: -1;
+}
+
+.spotlight-box {
+  position: absolute; /**/
+  height: 44px;
+  background: rgba(255, 255, 255, 1);
+}

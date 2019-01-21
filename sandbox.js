@@ -33,17 +33,17 @@ var column = document.getElementById('column');
 var textPane = document.getElementById('text-pane');
 var spotlightPane = document.getElementById('spotlight-pane');
 
-var segs = [];
+/*var segs = [];
 segs.push.apply(segs, document.getElementsByClassName('seg'));
-var numSegs = segs.length;
+var numSegs = segs.length;*/
 
 var segRanges = [];
 
-(function () {
+/*(function () {
   for (var i = 0; i < numSegs; i += 1) {
     segs[i].id = i;
   }
-})();
+})();*/
 
 var fragment = document.createDocumentFragment();
 
