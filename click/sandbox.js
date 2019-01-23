@@ -19,11 +19,10 @@ var extensionWidth = 7; //
 
 // getData() getPositions() crawlRects() getBounds() getBoxes()
 
-function getPositions() { // Refactor?
-  
-  var t0 = performance.now();
+function getPositions() {
   
   var rects;
+  var nRects;
   var rect;
   
   var top;
@@ -38,9 +37,11 @@ function getPositions() { // Refactor?
   for (var i = 0; i < nSegs; i++) {
     
     rects = segs[i].getClientRects();
+    nRects = rects.length;
+    
     segRanges[i] = {};
     
-    for (var j = 0; j < rects.length; j++) {
+    for (var j = 0; j < nRects; j++) {
       
       rect = rects[j];
       textXY = getTextXY(rect.left, rect.top);
@@ -48,7 +49,7 @@ function getPositions() { // Refactor?
       left = textXY.x - segBoxPadX;
       width = rect.width + segBoxPadX * 2;
       
-      if (j !== rects.length - 1) {
+      if (j !== nRects - 1) {
         
         width += extensionWidth;
       }
@@ -57,7 +58,7 @@ function getPositions() { // Refactor?
       
       if (isNewLine(top)) {
         
-        currentLine += 1;
+        currentLine++;
         
         lines[currentLine] = {
           top: top,
@@ -74,7 +75,7 @@ function getPositions() { // Refactor?
       
       segBoxesByLine[currentLine].push({
         left: left,
-        right: right,
+        right: left + width,
         segIndex: i
       });
       
@@ -84,16 +85,13 @@ function getPositions() { // Refactor?
         segRanges[i].startLeft = left;
       }
       
-      if (j === rects.length - 1) {
+      if (j === nRects - 1) {
         
         segRanges[i].endLine = currentLine;
         segRanges[i].endRight = right;
       }
     }
   }
-  
-  var t1 = performance.now();
-  console.log(t1 - t0);
   
   function isNewLine(top) {
     
