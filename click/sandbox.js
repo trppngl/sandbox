@@ -1,28 +1,125 @@
 var textPane = document.getElementById('text-pane');
+var spotlightPane = document.getElementById('spotlight-pane');
 
 var segs = [];
 segs.push.apply(segs, document.getElementsByClassName('seg'));
 var nSegs = segs.length;
 
+var lines = [];
 var segBoxesByLine = [];
+var segRanges = [];
+var spotlightBoxes = [];
 
 var segBoxPadX = 3.5; //
 var segBoxPadY = 5.5; //
-
 var lineHeight = 44;
+var extensionWidth = 7; //
 
 var textPaneTop = 22; //
 
 //
 
-function clearSpotlight() {
-  for (var i = 0; i < spotlightBoxes.length; i++) {
-    spotlightBoxes[i].style.left = '0px';
-    spotlightBoxes[i].style.width = '0px';
+// getData() getPositions() crawlRects() getBounds() getBoxes()
+
+function getBounds() {
+  
+  var rects;
+  var rect;
+  
+  var top;
+  var left;
+  var width;
+  var right;
+  
+  var textPaneRect = textPane.getBoundingClientRect(); //
+  var textPaneTop = textPaneRect.top; //
+  var textPaneLeft = textPaneRect.left; //
+  
+  var segBox = {};
+  
+  for (var i = 0; i < nSegs; i++) {
+    
+    rects = segs[i].getClientRects();
+    segRanges[i] = {};
+    
+    for (var j = 0; j < rects.length; j++) {
+      
+      rect = rects[j];
+      top = rect.top - segBoxPadY - textPaneTop;
+      left = rect.left - segBoxPadX - textPaneLeft;
+      width = rect.width + segBoxPadX * 2;
+      
+      if (j !== rects.length - 1) {
+        
+        width += extensionWidth;
+      }
+      
+      right = left + width;
+      
+      segBox = {
+        left: left,
+        right: right,
+        segIndex: i
+      }
+      
+      if (isNewLine(top)) {
+        
+        lines.push({
+          top: top,
+          left: left,
+          width: width
+        });
+        
+        segBoxesByLine[lines.length - 1] = [];
+        
+      } else {
+        
+        lines[lines.length - 1].width += width;
+      }
+      
+      segBoxesByLine[lines.length - 1].push(segBox);
+      
+      if (j === 0) {
+        
+        segRanges[i].startLine = lines.length - 1;
+        segRanges[i].startLeft = left;
+      }
+      
+      if (j === rects.length - 1) {
+        
+        segRanges[i].endLine = lines.length - 1;
+        segRanges[i].endRight = right;
+      }
+    }
+  }
+  
+  function isNewLine(top) {
+    
+    if (lines.length === 0 || lines[lines.length - 1].top !== top) {
+      
+      return true;
+    }
   }
 }
 
-// makeSpotlight() placeSpotlight() putSpotlight()
+function makeSpotlightBoxes() {
+  
+  var fragment = document.createDocumentFragment(); // Needed?
+  var box;
+  
+  for (i = 0; i < lines.length; i++) {
+    
+    box = document.createElement('div');
+    box.classList.add('spotlight-box');
+    box.style.top = lines[i].top + 'px';
+    fragment.appendChild(box);
+    spotlightBoxes.push(box);
+  }
+  
+  spotlightPane.appendChild(fragment);
+}
+
+//
 
 function moveSpotlight(range) {
   
@@ -55,94 +152,14 @@ function moveSpotlight(range) {
     spotlightBoxes[i].style.left = left + 'px';
     spotlightBoxes[i].style.width = width + 'px';
   }
-}
-
-// Testing
-
-var spotlightBoxes = [];
-spotlightBoxes.push.apply(spotlightBoxes, document.getElementsByClassName('spotlight-box'));
-
-(function () { //
-  spotlightBoxes[1].style.top = '66px';
-  spotlightBoxes[2].style.top = '110px';
-})();
-
-var segBoxesByLine = [
-  [{left: 0, right: 215, segIndex: 0}],
-  [{left: 0, right: 155, segIndex: 1},
-  {left: 155, right: 342, segIndex: 2},
-  {left: 342, right: 445, segIndex: 3},
-  {left: 445, right: 480, segIndex: 4}],
-  [{left: 0, right: 85, segIndex: 4}]
-];
-
-var lines = [
-  {top: 0, left: 0, width: 215},
-  {top: 66, left: 0, width: 480},
-  {top: 110, left: 0, width: 85}
-];
-
-var segRanges = [
-  {startLine: 0, endLine: 0, startLeft: 0, endRight: 215},
-  {startLine: 1, endLine: 1, startLeft: 0, endRight: 155},
-  {startLine: 1, endLine: 1, startLeft: 155, endRight: 342},
-  {startLine: 1, endLine: 1, startLeft: 342, endRight: 445},
-  {startLine: 1, endLine: 2, startLeft: 445, endRight: 85}
-]
-
-/*function test() { //
   
-  var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
-  var scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
-  
-  var textPaneRect = textPane.getBoundingClientRect();
-  var textPaneTop = textPaneRect.top;
-  var textPaneLeft = textPaneRect.left;
-  
-  var xOffset = scrollLeft - textPaneLeft;
-  var yOffset = scrollTop - textPaneTop;
-  
-  var top;
-  var left;
-  var width;
-  
-  var theseRects;
-  
-  for (var i = 0; i < nSegs; i++) {
+  function clearSpotlight() {
     
-    segBoxesByLine[i] = [];
-    theseRects = segs[i].getClientRects();
-    
-    for (var j = 0; j < theseRects.length; j++) {
+    for (var i = 0; i < spotlightBoxes.length; i++) {
       
-      top = theseRects[j].top + yOffset - segBoxPadY;
-      left = theseRects[j].left + xOffset - segBoxPadX;
-      right = theseRects[j].right + xOffset + segBoxPadX;
-      
-      segBoxesByLine[i][j] = {
-        top: top,
-        left: left,
-        right: right
-      }
+      spotlightBoxes[i].style.left = '0px';
+      spotlightBoxes[i].style.width = '0px';
     }
-  }
-}*/
-
-// Helper functions
-
-function isInLine(y, line) {
-
-  if (line.top <= y && y < line.top + 44) {
-
-    return true;
-  }
-}
-
-function isInSegBox(x, segBox) {
-
-  if (segBox.left <= x && x < segBox.right) {
-
-    return true;
   }
 }
 
@@ -174,23 +191,33 @@ function handleClick(e) {
       }
     } 
   }
-}
+  
+  function isInLine(y, line) {
 
-/*function handleClick(e) {
+    if (line.top <= y && y < line.top + 44) {
+
+      return true;
+    }
+  }
   
-  var clientX = e.clientX; //
-  var clientY = e.clientY; //
-  var pageX = e.pageX; //
-  var pageY = e.pageY; //
-  var offsetX = e.offsetX; //
-  var offsetY = e.offsetY; //
-  
-  console.log(clientX, clientY); //
-  console.log(pageX, pageY); //
-  console.log(offsetX, offsetY); //
-  console.log(e.target); //
-}*/
+  function isInSegBox(x, segBox) {
+
+    if (segBox.left <= x && x < segBox.right) {
+
+      return true;
+    }
+  }
+}
 
 // Event listeners
 
 textPane.addEventListener('click', handleClick, false);
+
+//
+
+getBounds();
+makeSpotlightBoxes();
+
+/*var t0 = performance.now();
+var t1 = performance.now();
+console.log(t1 - t0);*/
