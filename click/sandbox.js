@@ -15,13 +15,13 @@ var segBoxPadY = 5.5; //
 var lineHeight = 44;
 var extensionWidth = 7; //
 
-var textPaneTop = 22; //
-
-//
+// Init
 
 // getData() getPositions() crawlRects() getBounds() getBoxes()
 
-function getBounds() {
+function getPositions() { // Refactor?
+  
+  var t0 = performance.now();
   
   var rects;
   var rect;
@@ -31,11 +31,9 @@ function getBounds() {
   var width;
   var right;
   
-  var textPaneRect = textPane.getBoundingClientRect(); //
-  var textPaneTop = textPaneRect.top; //
-  var textPaneLeft = textPaneRect.left; //
+  var textXY;
   
-  var segBox = {};
+  var currentLine = -1;
   
   for (var i = 0; i < nSegs; i++) {
     
@@ -45,8 +43,9 @@ function getBounds() {
     for (var j = 0; j < rects.length; j++) {
       
       rect = rects[j];
-      top = rect.top - segBoxPadY - textPaneTop;
-      left = rect.left - segBoxPadX - textPaneLeft;
+      textXY = getTextXY(rect.left, rect.top);
+      top = textXY.y - segBoxPadY;
+      left = textXY.x - segBoxPadX;
       width = rect.width + segBoxPadX * 2;
       
       if (j !== rects.length - 1) {
@@ -56,42 +55,45 @@ function getBounds() {
       
       right = left + width;
       
-      segBox = {
-        left: left,
-        right: right,
-        segIndex: i
-      }
-      
       if (isNewLine(top)) {
         
-        lines.push({
+        currentLine += 1;
+        
+        lines[currentLine] = {
           top: top,
           left: left,
           width: width
-        });
+        };
         
-        segBoxesByLine[lines.length - 1] = [];
+        segBoxesByLine[currentLine] = [];
         
       } else {
         
-        lines[lines.length - 1].width += width;
+        lines[currentLine].width += width;
       }
       
-      segBoxesByLine[lines.length - 1].push(segBox);
+      segBoxesByLine[currentLine].push({
+        left: left,
+        right: right,
+        segIndex: i
+      });
       
       if (j === 0) {
         
-        segRanges[i].startLine = lines.length - 1;
+        segRanges[i].startLine = currentLine;
         segRanges[i].startLeft = left;
       }
       
       if (j === rects.length - 1) {
         
-        segRanges[i].endLine = lines.length - 1;
+        segRanges[i].endLine = currentLine;
         segRanges[i].endRight = right;
       }
     }
   }
+  
+  var t1 = performance.now();
+  console.log(t1 - t0);
   
   function isNewLine(top) {
     
@@ -119,7 +121,7 @@ function makeSpotlightBoxes() {
   spotlightPane.appendChild(fragment);
 }
 
-//
+// Move spotlight
 
 function moveSpotlight(range) {
   
@@ -163,12 +165,27 @@ function moveSpotlight(range) {
   }
 }
 
+// Helpers
+
+function getTextXY(x, y) {
+  
+  var rect = textPane.getBoundingClientRect();
+  var left = rect.left;
+  var top = rect.top;
+  
+  return {
+    x: x - left,
+    y: y - top
+  }
+}
+
 // Event handlers
 
 function handleClick(e) {
   
-  var x = e.pageX - textPane.getBoundingClientRect().left; //
-  var y = e.pageY - textPaneTop; //
+  var textXY = getTextXY(e.clientX, e.clientY); //
+  var x = textXY.x;
+  var y = textXY.y;
   
   var line;
   var segBox;
@@ -194,7 +211,7 @@ function handleClick(e) {
   
   function isInLine(y, line) {
 
-    if (line.top <= y && y < line.top + 44) {
+    if (line.top <= y && y < line.top + lineHeight) {
 
       return true;
     }
@@ -215,7 +232,7 @@ textPane.addEventListener('click', handleClick, false);
 
 //
 
-getBounds();
+getPositions();
 makeSpotlightBoxes();
 
 /*var t0 = performance.now();
