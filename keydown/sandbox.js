@@ -243,7 +243,6 @@ function playSeg(targetIndex, userAction) {
   
   if (userAction) {
     
-    console.log('userAction');
     audio.currentTime = times[currentIndex][0];
   }
   
