@@ -144,19 +144,67 @@ function SpotlightEdge() { // Could inherit but too complicated?
   this.x = 0
 }
 
-// Right now doesn't handle first/last line
 SpotlightEdge.prototype.shift = function(distance) { //
   
   var x = this.x + distance;
   var l = this.line;
   
-  while (x > lines[l].width || (this === spotlight.start && x === lines[l].width)) { //
+  while (
+    
+    x > lines[l].width
+    || (this === spotlight.start && x === lines[l].width)
+    
+  ) {
+    
+    if (l < nLines - 1) {
+      
+      x -= lines[l].width;
+      l++;
+    
+    } else {
+      
+      x = lines[l].width;
+      break;
+    }
+  }
+  
+  while (x < 0 || (this === spotlight.end && x === 0)) { //
+    
+    if (l > 0) {
+      
+      l--;
+      x += lines[l].width;
+    
+    } else {
+      
+      x = 0;
+      break;
+    }
+  }
+  
+  this.x = x;
+  this.line = l;
+}
+
+// Below version doesn't handle overshooting first/last line
+
+/*SpotlightEdge.prototype.shift = function(distance) {
+  
+  var x = this.x + distance;
+  var l = this.line;
+  
+  while (
+    
+    x > lines[l].width
+    || (this === spotlight.start && x === lines[l].width)
+    
+  ) {
     
     x -= lines[l].width;
     l++;
   }
   
-  while (x < 0 || (this === spotlight.end && x === 0)) { //
+  while (x < 0 || (this === spotlight.end && x === 0)) {
     
     l--;
     x += lines[l].width;    
@@ -164,7 +212,7 @@ SpotlightEdge.prototype.shift = function(distance) { //
   
   this.x = x;
   this.line = l;
-}
+}*/
 
 // Move spotlight
 
