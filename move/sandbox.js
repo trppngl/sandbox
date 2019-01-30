@@ -6,6 +6,7 @@ segs.push.apply(segs, document.getElementsByClassName('seg'));
 var nSegs = segs.length;
 
 var lines = [];
+var nLines = 0;
 var segBoxesByLine = [];
 var segRanges = [];
 var spotlightBoxes = [];
@@ -38,8 +39,6 @@ function getPositions() {
   
   var textXY;
   
-  var currentLine = -1;
-  
   for (var i = 0; i < nSegs; i++) {
     
     rects = segs[i].getClientRects();
@@ -64,22 +63,22 @@ function getPositions() {
       
       if (isNewLine(top)) {
         
-        currentLine++;
+        nLines++;
         
-        lines[currentLine] = {
+        lines[nLines - 1] = {
           top: top,
           left: left,
           width: width
         };
         
-        segBoxesByLine[currentLine] = [];
+        segBoxesByLine[nLines - 1] = [];
         
       } else {
         
-        lines[currentLine].width += width;
+        lines[nLines - 1].width += width;
       }
       
-      segBoxesByLine[currentLine].push({
+      segBoxesByLine[nLines - 1].push({
         left: left,
         right: left + width,
         segIndex: i
@@ -87,13 +86,13 @@ function getPositions() {
       
       if (j === 0) {
         
-        segRanges[i].start.line = currentLine;
+        segRanges[i].start.line = nLines - 1;
         segRanges[i].start.x = left;
       }
       
       if (j === nRects - 1) {
         
-        segRanges[i].end.line = currentLine;
+        segRanges[i].end.line = nLines - 1;
         segRanges[i].end.x = right;
       }
     }
@@ -101,7 +100,7 @@ function getPositions() {
   
   function isNewLine(top) {
     
-    if (lines.length === 0 || lines[lines.length - 1].top !== top) {
+    if (nLines === 0 || lines[nLines - 1].top !== top) {
       
       return true;
     }
@@ -113,7 +112,7 @@ function makeSpotlightBoxes() {
   var fragment = document.createDocumentFragment(); // Needed?
   var box;
   
-  for (i = 0; i < lines.length; i++) {
+  for (i = 0; i < nLines; i++) {
     
     box = document.createElement('div');
     box.classList.add('spotlight-box');
@@ -125,41 +124,54 @@ function makeSpotlightBoxes() {
   spotlightPane.appendChild(fragment);
 }
 
-// TESTING
+// Object constructors and methods
 
 function LineRange() { // Rename?
   
-  this.start = new LineRangeEdge;
-  this.end = new LineRangeEdge;
+  this.start = new RangeEdge;
+  this.end = new RangeEdge;
 }
 
-function LineRangeEdge() { // Rename?
+function RangeEdge() { // Rename?
   
   this.line = 0;
   this.x = 0;
 }
 
-function SpotlightEdge() {
+function SpotlightEdge() { // Could inherit but too complicated?
   
   this.line = 0,
   this.x = 0
 }
 
-SpotlightEdge.prototype.shift = function(increment) { //
+// Right now doesn't handle first/last line or widthless
+SpotlightEdge.prototype.shift = function(distance) { //
   
-  this.x += increment;
+  this.x += distance;
+  
+  while (this.x > lines[this.line].width) {
+    
+    this.x -= lines[this.line].width;
+    this.line++;
+  }
+  
+  while (this.x < 0) {
+    
+    this.line--;
+    this.x += lines[this.line].width;    
+  }
 }
 
 // Move spotlight
 
 // moveSpotlight() shiftSpotlight() repositionSpotlight()
 
-function repositionSpotlight(range) {
+function positionSpotlight(targetRange) {
   
-  spotlight.start.line = range.start.line;
-  spotlight.end.line = range.end.line;
-  spotlight.start.x = range.start.x;
-  spotlight.end.x = range.end.x;
+  spotlight.start.line = targetRange.start.line;
+  spotlight.end.line = targetRange.end.line;
+  spotlight.start.x = targetRange.start.x;
+  spotlight.end.x = targetRange.end.x;
 }
 
 function paintSpotlight() {
@@ -231,8 +243,9 @@ function handleClick(e) {
   
   var line;
   var segBox;
+  var targetRange;
   
-  for (var i = 0; i < lines.length; i++) {
+  for (var i = 0; i < nLines; i++) {
     
     line = lines[i];
     
@@ -244,7 +257,8 @@ function handleClick(e) {
         
         if (isInSegBox(x, segBox)) {
           
-          repositionSpotlight(segRanges[segBox.segIndex]);
+          targetRange = segRanges[segBox.segIndex];
+          positionSpotlight(targetRange);
           paintSpotlight();
           return;
         }
