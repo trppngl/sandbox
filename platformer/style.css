@@ -1,0 +1,9 @@
+body {
+  background: rgb(243, 242, 246);
+}
+
+#renderer {
+    background: rgb(243, 242, 246);
+	display: block;
+	margin: 32px auto 32px auto;
+}
